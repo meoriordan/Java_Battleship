@@ -40,6 +40,10 @@ public class User {
 		this.totalPoints = totalPoints;
 	}
 	
+	public void winGame() {
+		this.totalPoints += 1;
+	}
+	
 	
 	
 }

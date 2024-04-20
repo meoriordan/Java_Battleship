@@ -14,5 +14,13 @@ public class Grid {
 		positions[position] = value;
 	}
 	
+	public int getTotalPoints() {
+		int totalPoints = 0;
+		for (int i = 0; i < 100; i++) {
+			totalPoints += i;
+		}
+		return totalPoints;
+	}
+	
 	
 }

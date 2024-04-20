@@ -2,13 +2,22 @@
 
 public class Ship {
 	
+	private static int shipIDs;
+	
 	private int shipID;
 	private int boardID;
 	private int[] startPos;
 	private int[] endPos;
-	private String shipType;
-	private int length;
+	private final String shipType;
+	private final int length;
 	private boolean inPlay;
+	
+	public Ship(int boardID, String shipType, int length) {
+		this.boardID = boardID;
+		this.shipType = shipType;
+		this.length = length;
+		this.inPlay = true;
+	}
 	
 	
 	public int getShipID() {
@@ -48,11 +57,6 @@ public class Ship {
 		this.inPlay = inPlay;
 	}
 	
-	
-	
-	
-	
-	
-	
+
 	
 }
