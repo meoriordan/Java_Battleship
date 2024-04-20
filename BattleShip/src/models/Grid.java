@@ -1,3 +1,5 @@
+package models;
+
 import java.util.ArrayList;
 
 public class Grid {
@@ -20,7 +22,6 @@ public class Grid {
 			totalPoints += i;
 		}
 		return totalPoints;
-	}
-	
+	}	
 	
 }

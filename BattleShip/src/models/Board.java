@@ -1,5 +1,7 @@
+package models;
 
-
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Board {
 	
@@ -10,6 +12,19 @@ public class Board {
 	private Grid opponentGrid;
 	private int gameID;
 	private int userID;
+	private ArrayList<Ship> ships;
+	
+	HashMap<String, Integer> shipTypes = new HashMap<String, Integer>();
+	
+
+	private void populateShipTypes() {
+		shipTypes.put("Carrier",5);
+		shipTypes.put("Battleship",4);
+		shipTypes.put("Cruiser",3);
+		shipTypes.put("Submarine",3);
+		shipTypes.put("Destroyer",2);
+	}
+
 	
 	public Board(int gameID, int userID) {
 		this.boardID = boardIDs++;
@@ -17,6 +32,13 @@ public class Board {
 		this.userID = userID;
 		playerGrid = new Grid(this.boardID);
 		opponentGrid = new Grid(this.boardID);
+		ships = new ArrayList<Ship>();
+		
+		populateShipTypes();
+		
+		for (String s: shipTypes.keySet()) {
+			ships.add(new Ship(this.boardID,s,shipTypes.get(s)));
+		}
 	}
 	
 	public int getBoardId() {
@@ -33,10 +55,5 @@ public class Board {
 	public int checkPlayerGridScore() {
 		return playerGrid.getTotalPoints();
 	}
-	
-	
-	
-	
-	
 	
 }

@@ -1,6 +1,7 @@
+package models;
+
 
 public class User {
-	
 	
 	private int userID;
 	private String username;
@@ -13,7 +14,6 @@ public class User {
 		this.password = password;
 		this.totalPoints = totalPoints;
 	}
-	
 	
 	public int getUserID() {
 		return userID;

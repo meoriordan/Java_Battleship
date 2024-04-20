@@ -1,3 +1,5 @@
+package models;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -9,24 +11,11 @@ public class Game {
 	private User user0;
 	private User user1;
 	private int winner;
-	private int score0;
-	private int score1;
+//	private int score0;
+//	private int score1;
 	private Board board0;
 	private Board board1;
-	private ArrayList<Ship> ships0;
-	private ArrayList<Ship> ships1;
 	private Boolean gameOver;
-	
-	HashMap<String, Integer> shipTypes = new HashMap<String, Integer>();
-	
-
-	private void populateShipTypes() {
-		shipTypes.put("Carrier",5);
-		shipTypes.put("Battleship",4);
-		shipTypes.put("Cruiser",3);
-		shipTypes.put("Submarine",3);
-		shipTypes.put("Destroyer",2);
-	}
 
 	
 	public Game(User user0, User user1) {
@@ -38,25 +27,20 @@ public class Game {
 		board0 = new Board(this.gameID, user0.getUserID());
 		board1 = new Board(this.gameID, user1.getUserID());
 		
-		ships0 = new ArrayList<Ship>();
-		ships1 = new ArrayList<Ship>();
-		
-		populateShipTypes();
-		
-		for (String s: shipTypes.keySet()) {
-			ships0.add(new Ship(board0.getBoardId(),s,shipTypes.get(s)));
-			ships1.add(new Ship(board1.getBoardId(),s,shipTypes.get(s)));
-		}
-		
-		
 	}
 	
-	public void takeTurn(User u) {
-		//something to do with boards
-		//user places peg on grid where there is not already a peg (this happens on both boards)
-		//check if game is won 	
-		
+	public void startGame() {
+		setBoards();
+		playGame();
 	}
+	
+	private void setBoards() {
+		//code for boards getting initial positions of ships
+		board0.initializePlayerGrid();
+		board1.initializePlayerGrid();
+	}
+	
+
 	
 	public void playGame() {
 		
@@ -83,19 +67,16 @@ public class Game {
 				winner = 0;
 				user0.winGame();
 				gameOver = true;
+			}
+		
 		}
-		
-		
+			
 	}
-		
-				
-				
-		
-				
-		
-		
-		
-				
+	
+	public void takeTurn(User u) {
+		//something to do with boards
+		//user places peg on grid where there is not already a peg (this happens on both boards)
+		//check if game is won 	
 	}
 	
 	
