@@ -10,10 +10,19 @@ public class Grid {
 	public Grid(int boardID) {
 		this.boardID = boardID;
 		positions = new int[100];
+		
+		//initialize all positions to zero
+		for(int i = 1; i<=100;i++) {
+			positions[i] = 0;
+		}
 	}
 	
 	public void setValue(int value, int position) {
 		positions[position] = value;
+	}
+	
+	public int getPosValue(int pos) { //because we will only want to change this value if the current value is -1
+		return positions[pos];
 	}
 	
 	public int getTotalPoints() {

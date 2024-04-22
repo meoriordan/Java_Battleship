@@ -8,8 +8,8 @@ public class Ship {
 	private int boardID;
 	private int[] startPos;
 	private int[] endPos;
-	private final String shipType;
-	private final int length;
+	private String shipType;
+	private int length;
 	private boolean inPlay;
 	
 	public Ship(int boardID, String shipType, int length) {

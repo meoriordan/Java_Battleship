@@ -22,15 +22,19 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
+import models.Grid;
+
 public class ButtonGrid extends JPanel{
 	private static final ArrayList<String> LETTERS = new ArrayList<String>(Arrays.asList("A","B","C","D","E","F","G","H","I","J"));
 	private static final ArrayList<String> NUMBERS = new ArrayList<String>(Arrays.asList("","1","2","3","4","5","6","7","8","9","10"));
 	private int squareSize;
 	private SnapGrid sg;
+	private Grid controlsGrid;
 	private HashMap<JButton,Boolean> pushedButtons;
 	
-	public ButtonGrid(SnapGrid sg){
+	public ButtonGrid(SnapGrid sg,Grid cg){
 		this.sg = sg;
+		this.controlsGrid = cg;
 		//setSquareSize();
 		pushedButtons = new HashMap<JButton,Boolean>();
 		GridLayout gd = new GridLayout(11,11,0,0);
@@ -91,6 +95,9 @@ public class ButtonGrid extends JPanel{
 			// TODO Auto-generated method stub
 			JButton jb = (JButton) e.getSource();
 			jb.setBackground(Color.RED);
+			int pos = Integer.valueOf(jb.getName());
+		//	int currValue
+			
 			pushedButtons.put(jb,true);
 			jb.removeActionListener(this);
 			
@@ -125,10 +132,11 @@ public class ButtonGrid extends JPanel{
 	public static void main(String args[]) {
 		JFrame frame = new JFrame("SNAP GRID TEST");
 		SnapGrid sg = new SnapGrid();
-		ButtonGrid bg = new ButtonGrid(sg);
+		//Grid cg = new Grid(1);///boardID
+	//	ButtonGrid bg = new ButtonGrid(sg,cg);
 		frame.setLayout(new BorderLayout());
 		frame.add(sg,BorderLayout.EAST);
-		frame.add(bg,BorderLayout.CENTER);
+	//	frame.add(bg,BorderLayout.CENTER);
 		frame.setSize(new Dimension(1000,1000));
 		frame.setVisible(true);
 		frame.setLocationRelativeTo(null);
