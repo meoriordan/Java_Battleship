@@ -24,12 +24,12 @@ public class Game {
 		this.user1 = user1;
 //		score0 = 0;
 //		score1 = 0;
-		board0 = new Board(this.gameID, user0.getUserID());
-		board1 = new Board(this.gameID, user1.getUserID());
+		//board0 = new Board(this.gameID, user0.getUserID());
+		//board1 = new Board(this.gameID, user1.getUserID());
 		
 		//Set boards as each others opponent
-		board0.setOpponent(board1.getPlayerGrid());
-		board1.setOpponent(board0.getPlayerGrid());
+		//board0.setOpponent(board1.getPlayerGrid());
+	//	board1.setOpponent(board0.getPlayerGrid());
 		
 	}
 	
@@ -41,7 +41,7 @@ public class Game {
 	private void setBoards() {
 		//code for boards getting initial positions of ships
 		board0.initializePlayerGrid();
-		board1.initializePlayerGrid();
+	//	board1.initializePlayerGrid();
 	}
 	
 

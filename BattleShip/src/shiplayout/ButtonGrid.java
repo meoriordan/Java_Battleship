@@ -22,6 +22,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
+import controller.GridButtonListener;
 import models.Grid;
 
 public class ButtonGrid extends JPanel{
@@ -29,14 +30,16 @@ public class ButtonGrid extends JPanel{
 	private static final ArrayList<String> NUMBERS = new ArrayList<String>(Arrays.asList("","1","2","3","4","5","6","7","8","9","10"));
 	private int squareSize;
 	private SnapGrid sg;
-	private Grid controlsGrid;
+	//private Grid controlsGrid;
 	private HashMap<JButton,Boolean> pushedButtons;
+	private HashMap<Integer,JButton> buttonMap;
 	
-	public ButtonGrid(SnapGrid sg,Grid cg){
+	public ButtonGrid(SnapGrid sg){
 		this.sg = sg;
-		this.controlsGrid = cg;
+		//this.controlsGrid = cg;
 		//setSquareSize();
 		pushedButtons = new HashMap<JButton,Boolean>();
+		buttonMap = new HashMap<Integer,JButton>();
 		GridLayout gd = new GridLayout(11,11,0,0);
 		
 		//JButton button1 = new JButton("1");
@@ -73,10 +76,11 @@ public class ButtonGrid extends JPanel{
 					JButton jb = new JButton(String.valueOf(boxCount));
 					jb.setBorder(BorderFactory.createLineBorder(Color.BLACK,1));
 					jb.setBackground(Color.WHITE);
-					jb.addActionListener(new buttonPushListener());
+					//jb.addActionListener(new buttonPushListener());
 					//jb.setSize(d);
 					add(jb);
 					pushedButtons.put(jb,false);
+					buttonMap.put(boxCount,jb);
 					//gd.addLayoutComponent(String.valueOf(boxCount),jb);
 					boxCount +=1;
 				}
@@ -88,21 +92,12 @@ public class ButtonGrid extends JPanel{
 		this.setSize(getPreferredSize());
 	}
 	
-	class buttonPushListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			// TODO Auto-generated method stub
-			JButton jb = (JButton) e.getSource();
-			jb.setBackground(Color.RED);
-			int pos = Integer.valueOf(jb.getName());
-		//	int currValue
-			
-			pushedButtons.put(jb,true);
-			jb.removeActionListener(this);
-			
-		}
-		
+	public void setPushedButtons(HashMap<JButton,Boolean> pushedButtons){
+		this.pushedButtons = pushedButtons;
+	}
+	
+	public HashMap<JButton,Boolean> getPushedButtons() {
+		return this.pushedButtons;
 	}
 	
 	@Override
@@ -128,6 +123,27 @@ public class ButtonGrid extends JPanel{
 		return nd;
 		
 	}
+	
+	public void disableButtonGrid() {
+		for(JButton button : pushedButtons.keySet()) {
+			button.setEnabled(false);
+		}
+	}
+	
+	public void enableButtonGrid() {
+		for(HashMap.Entry<JButton,Boolean> button : pushedButtons.entrySet()) {
+			if(!button.getValue()) { // check if button already pushed, if so do not enable again
+				button.getKey().setEnabled(true);
+			}
+		}
+	}
+	
+	public void addButtonListener(int i,GridButtonListener gbl) {
+		JButton button = buttonMap.get(i);
+		button.addActionListener(gbl);
+	}
+	
+	
 	
 	public static void main(String args[]) {
 		JFrame frame = new JFrame("SNAP GRID TEST");

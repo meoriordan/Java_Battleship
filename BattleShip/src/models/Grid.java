@@ -9,7 +9,7 @@ public class Grid {
 	
 	public Grid(int boardID) {
 		this.boardID = boardID;
-		positions = new int[100];
+		positions = new int[101];
 		
 		//initialize all positions to zero
 		for(int i = 1; i<=100;i++) {

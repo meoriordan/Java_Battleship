@@ -86,6 +86,10 @@ public class Ship2 extends Rectangle{
 		return shipType;
 	}
 	
+	public String getShipType() {
+		return shipType;
+	}
+	
 	
 	
 //	@Override
