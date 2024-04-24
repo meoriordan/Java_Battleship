@@ -1,7 +1,8 @@
 CREATE TABLE users (
 	user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	username VARCHAR(50) NOT NULL,
+	username VARCHAR(50) UNIQUE NOT NULL ,
 	password VARCHAR(50) NOT NULL
+	totalPoints INT 
 );
 
 INSERT INTO users (username, password) VALUES ('elizabeth','password');
