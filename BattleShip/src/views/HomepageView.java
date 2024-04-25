@@ -1,8 +1,8 @@
 package views;
 
 import controller.LoginController;
-import controller.ConnectUsers;
 import models.User;
+import controller.ConnectUsers;
 
 import java.awt.*;
 import javax.swing.*;
@@ -25,22 +25,24 @@ public class HomepageView extends JFrame {
 	private User user;
 	private ArrayList<User> onlineUsers;
 	
-	public HomepageView(User user, ArrayList<User> onlineUsers) {
+//	public HomepageView(User user, ArrayList<User> onlineUsers) {
+	public HomepageView() {
+
 			JPanel panel = new JPanel();
 			
-			this.user = user;
-			this.onlineUsers = onlineUsers;
+//			this.user = user;
+//			this.onlineUsers = onlineUsers;
 			
 //			for (shiplayout.User u: onlineUsers) {
 //				panel.add(new JLabel(u.getUsername()));
 //			}
 			
-			for (User u: onlineUsers) {
-//				String x = u.getUsername();
-				JButton x = new JButton(u.getUsername());
-				panel.add(x);
-				x.addActionListener(new LoginListener());
-			}
+//			for (User u: onlineUsers) {
+////				String x = u.getUsername();
+//				JButton x = new JButton(u.getUsername());
+//				panel.add(x);
+//				x.addActionListener(new LoginListener());
+//			}
 //			panel.add(new JLabel("UsER NAME: "));
 //			panel.add(new JLabel("Password: "));
 //			panel.add(new JLabel(user.getUsername()));

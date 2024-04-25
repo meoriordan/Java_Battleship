@@ -1,8 +1,9 @@
 package dao;
 
+import java.sql.DriverManager;
+
 import models.User;
 
-import java.sql.DriverManager;
 import java.sql.*;
 
 
@@ -70,12 +71,12 @@ public class UserDao {
 	}
 	
 	
-	public boolean findUser(User user) {
+	public boolean findUser(String username, String password) {
 		try {
 			PreparedStatement pstmt = conn.prepareStatement(FIND_BY_USERNAME_PASSWORD);
 			
-			pstmt.setString(1, user.getUsername());
-			pstmt.setString(2, user.getPassword());
+			pstmt.setString(1, username);
+			pstmt.setString(2, password);
 			
 			ResultSet rset = pstmt.executeQuery();
 			

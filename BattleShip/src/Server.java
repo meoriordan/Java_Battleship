@@ -1,5 +1,7 @@
 
+import controller.LoginController;
 import models.User;
+
 import java.awt.BorderLayout;
 
 import java.io.DataInputStream;
@@ -17,18 +19,14 @@ import java.util.Date;
 
 import javax.swing.*;
 
-
-
 public class Server extends JFrame implements Runnable {
 	
 	JTextArea ta;
 	ArrayList<User> activeUsers;
 
     private int clientNo = 0;
-//    static ArrayList<HandleAClient> ch = new ArrayList<>();
 	
 	public Server() {
-	
 		super("Server");
 		activeUsers = new ArrayList<User>();
 		ta = new JTextArea();
@@ -37,7 +35,6 @@ public class Server extends JFrame implements Runnable {
 	    setSize(400, 200);
 	    Thread t = new Thread(this);
 	    t.start();
-		
 	}
 	
 	public void run() {
@@ -60,10 +57,8 @@ public class Server extends JFrame implements Runnable {
 	  	        
 	            HandleAClient hac = new HandleAClient(socket, clientNo);
 	            Thread t = new Thread(hac);
-//	            ch.add(hac);
 	            t.start();	  	        
-	            }
-	          
+	            }      
 	        }
 	        catch(IOException ex) {
 	          ex.printStackTrace();
@@ -74,15 +69,20 @@ public class Server extends JFrame implements Runnable {
 	  class HandleAClient implements Runnable {
 		    private Socket socket; 
 		    private int clientNum;
+		    
 		    private DataInputStream inputFromClient;
 		    private DataOutputStream outputToClient;
+		    
 			private ObjectOutputStream toClientObj = null;
 			private ObjectInputStream fromClientObj = null;
+			
 		    private User user;
 		    
 		    public HandleAClient(Socket socket, int clientNum) {
+		    	
 		      this.socket = socket;
 		      this.clientNum = clientNum;
+		      
 		      try {
 		    	  this.inputFromClient = new DataInputStream(this.socket.getInputStream());
 		    	  this.outputToClient = new DataOutputStream(this.socket.getOutputStream());
@@ -92,32 +92,34 @@ public class Server extends JFrame implements Runnable {
 		      catch(IOException ex) {
 			        ex.printStackTrace();
 			        ta.append("Connection lost with client " + this.clientNum + '\n');
-
 			      }
 		    }
 
+		    
 		    public void run() {
 		      try {
 		    	  
 		        while (true) {
-		        	ta.append(inputFromClient.readUTF());
-		        	Object obj = fromClientObj.readObject();
-		        	user = (User)obj;
-//		        	User user = new User(1,"Elizabeth","test",0);
-		        	
-		        	int totalUsers = activeUsers.size();
-		        	outputToClient.writeInt(totalUsers);
-		        	for (User u: activeUsers) {
-		        		toClientObj.writeObject(u);
-		        	}
-		        	activeUsers.add(user);
-		        	ta.append(user.getUsername());
-		        	break;
+//		        	ta.append("this is a test");
+//		        	ta.append(inputFromClient.readUTF());
+		        	String username = inputFromClient.readUTF();
+		        	String password = inputFromClient.readUTF();
+		        	LoginController lc = new LoginController(username, password);
+		        	boolean verify = lc.verifyInfo();
+//		        	ta.append(String.valueOf(verify));
+		        	outputToClient.writeBoolean(verify);
+//		        	if (verify == true) {
+//			        	int totalUsers = activeUsers.size();
+//			        	outputToClient.writeInt(totalUsers);
+//			        	for (User u: activeUsers) {
+//			        		toClientObj.writeObject(u);
+//			        	}
+//			        	activeUsers.add(user);
+//			        	ta.append(user.getUsername());
+//			        	break;
+//		        	}
 		        }
 		      }
-		      catch(ClassNotFoundException ex) {
-		    	     ex.printStackTrace();
-		    	   }
 		      catch(IOException ex) {
 		    	  for (User u: activeUsers) {
 		    		  if (u.equals(user)) {
