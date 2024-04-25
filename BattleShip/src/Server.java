@@ -127,8 +127,9 @@ public class Server extends JFrame implements Runnable {
 		    
 		    public void attemptRegistration() {
 		    	try {
-		    		String username;
-		    		String password;
+		    		ta.append("registration occurring");
+		    		String username = inputFromClient.readUTF();
+		    		String password = inputFromClient.readUTF();
 		    		RegisterController rv = new RegisterController(username, password);
 		    		boolean creationSuccessful = rv.createUser();
 		    		outputToClient.writeBoolean(creationSuccessful);
@@ -136,6 +137,34 @@ public class Server extends JFrame implements Runnable {
 		    	catch (IOException e ) {
 		    		e.printStackTrace();
 		    	}
+		    }
+		    
+		    public void attemptLogin() {
+		    	try {
+		        	String username = inputFromClient.readUTF();
+		        	String password = inputFromClient.readUTF();
+
+		        	LoginController lc = new LoginController(username, password);
+		        	boolean verify = lc.verifyInfo();
+		        	outputToClient.writeBoolean(verify);
+		        	
+		        	if (verify == true) {   
+//			    		ta.append("ATTEMPTION LOGIN");
+
+		        		user = lc.retrieveUser();
+		        		toClientObj.writeObject(user);
+			        	Server.ch.add(this);
+			        	updateActiveUsers();
+//			        	ta.append(user.getUsername());
+		        	}
+		    	}
+		    	catch (IOException e) {
+		    		e.printStackTrace();
+		    	}
+
+	        	
+
+		    	
 		    }
 		    
 		    public void attemptConnection(User u1, User u2) {
@@ -150,74 +179,75 @@ public class Server extends JFrame implements Runnable {
 		    		e.printStackTrace();	
 		    	}
 		    }
-
+		    
 		    
 		    public void run() {
-		      try {
-		    	  
-		        while (true) {
-		        	String username = inputFromClient.readUTF();
-		        	String password = inputFromClient.readUTF();
-		        	LoginController lc = new LoginController(username, password);
-		        	boolean verify = lc.verifyInfo();
-		        	outputToClient.writeBoolean(verify);
-		        	
-		        	if (verify == true) {   
-		        		user = lc.retrieveUser();
-		        		toClientObj.writeObject(user);
-			        	Server.ch.add(this);
-			        	updateActiveUsers();
-			        	ta.append(user.getUsername());
-			        	break;
-		        	}
-		        }
-		        	
-	        	while (true) {
-	        		try {
-		        		Object o = fromClientObj.readObject();
-		        		User u = (User) o;
-		        		ta.append("THIS IS THE OPPONENT" + u.getUsername());
-		        		attemptConnection(this.user, u);
-	        		} 
-	        		catch (ClassNotFoundException e) {
-	        			e.printStackTrace();
-	        		}
-
-	        		
-	        	}
-		        
-		        
-//		        while (true) 
-		      }
-		      catch(IOException ex) {
-		    	  for (User u: activeUsers) {
-		    		  if (u.equals(user)) {
-		    			  activeUsers.remove(u);
-		    		  }
-		    	  }
-		    	  
-		        ex.printStackTrace();
-		        ta.append("Connection lost with client " + this.clientNum + '\n');
-		      }
-		      
-//		      boolean connected = false;
-//		      while (!connected) {
-//		    	  //code for getting a potential match from the client 
-//		    	  //using the homepage controller to check if potential match wants to play 
-//		    	  //and handling the connection
-//		      }
-		      
-		      //blah blah blah code for getting connection info, checking with that user, and reporting back to the first user 
-		      //maybe the server stores a hash map of socket + users; going through the list of active users it checks to find the one this user wants to connect with 
-		      //and once it finds that one sends the message there 
-		      
-		      //once the game is started the server also needs to take these two users and start the game with them 
+		    	try {
+		    		while (true) {
+		    			String action = inputFromClient.readUTF();
+		    			if (action.equals("REGISTER")) {
+		    				attemptRegistration();
+		    				//registration function called
+		    			}
+		    			else if (action.equals("LOGIN")) {
+		    				attemptLogin();
+		    				//login function called
+		    			} 
+		    			else if (action.equals("CONNECT")) {
+		    				//connection function called
+		    			}
+		    		}
+		    	}
+		    	catch (IOException e) {
+		    		e.printStackTrace();
+		    	}
 		    }
+
+		    
+//		    public void run() {
+//		      try {  
+//		        while (true) {
+//		        	String username = inputFromClient.readUTF();
+//		        	String password = inputFromClient.readUTF();
+//		        	LoginController lc = new LoginController(username, password);
+//		        	boolean verify = lc.verifyInfo();
+//		        	outputToClient.writeBoolean(verify);
+//		        	
+//		        	if (verify == true) {   
+//		        		user = lc.retrieveUser();
+//		        		toClientObj.writeObject(user);
+//			        	Server.ch.add(this);
+//			        	updateActiveUsers();
+//			        	ta.append(user.getUsername());
+//			        	break;
+//		        	}
+//		        }
+//		        	
+//	        	while (true) {
+//	        		try {
+//		        		Object o = fromClientObj.readObject();
+//		        		User u = (User) o;
+//		        		ta.append("THIS IS THE OPPONENT" + u.getUsername());
+//		        		attemptConnection(this.user, u);
+//	        		} 
+//	        		catch (ClassNotFoundException e) {
+//	        			e.printStackTrace();
+//	        		}
+//	        	}       
+//		      }
+//		      catch(IOException ex) {
+//		    	  for (User u: activeUsers) {
+//		    		  if (u.equals(user)) {
+//		    			  activeUsers.remove(u);
+//		    		  }
+//		    	  }  
+//		        ex.printStackTrace();
+//		        ta.append("Connection lost with client " + this.clientNum + '\n');
+//		      }
+//		    }
 		  }
 	  
-		  
-		 
-	
+
 	public static void main(String[] args) {
 		Server server = new Server();
 	    server.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

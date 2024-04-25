@@ -47,7 +47,7 @@ public class Client  {
 	
 	Socket socket = null;
 	
-	ArrayList<User> activeUsers;
+	ArrayList<User> activeUsers = null;
 	private User user;
 	
 	LoginView lv;
@@ -79,9 +79,11 @@ public class Client  {
 	}
 	
 	public void verifyLogin() {
+		
 		username = lv.getUserName();
 		password = lv.getPassword();
 		try {
+			toServer.writeUTF("LOGIN");
 			toServer.writeUTF(username);
 			toServer.writeUTF(password);
 			Boolean verify = fromServer.readBoolean();
@@ -100,12 +102,9 @@ public class Client  {
 					Object o2 = fromServerObj.readObject();
 					activeUsers.add((User) o2);
 				}
-				
+
 				hv = new HomepageView(user, activeUsers, this);
 				hv.setVisible(true);	
-				
-
-
 			}
 		}
 		catch (ClassNotFoundException e) {
@@ -170,8 +169,6 @@ public class Client  {
 			e.printStackTrace();
 		}
 		System.out.println("HERE IN CLIENT");
-		
-//		hv.updateUsers(activeUsers);
 	}
 	
 	public static void main(String[] args) {
