@@ -93,6 +93,26 @@ public class UserDao {
 		}
 	}
 	
+	public User retrieveUser(String username, String password) {
+		User user = null;
+		try {
+			PreparedStatement pstmt = conn.prepareStatement(FIND_BY_USERNAME_PASSWORD);
+			
+			pstmt.setString(1, username);
+			pstmt.setString(2, password);
+			
+			ResultSet rset = pstmt.executeQuery();
+			user = new User(rset.getInt(1), username, password, rset.getInt(4));
+			
+		}
+		catch (SQLException e) {
+			e.printStackTrace();
+//			return false;
+		}
+		return user;
+
+	}
+	
 	
 //	public static void main(String[] args) {
 //		UserDao u = new UserDao();

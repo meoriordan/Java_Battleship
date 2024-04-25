@@ -9,43 +9,28 @@ public class LoginController {
 	
 	String username;
 	String password;
-	LoginView lv;
-	HomepageView hv;
 	User user;
 	UserDao ud;
 	
 	/*this class handles taking the username and password 
-	 * entered in the view and passes them to the model to authenticate the user 
-	 * 
-	 * if successful it received a user object that it can pass to other controller functions*/
-	 
+	 * entered in the view and passed through the client to the server to this controller 
+	 * it verifies the existence of this username and password in the database 
+	 * and sends user an object back if authentication is successful*/
+	
 	public LoginController(String username, String password) {
 		this.username = username;
 		this.password = password;
-//		this.lv = lv; 
 		this.ud = new UserDao();
 	}
 	
 	public boolean verifyInfo() {
-		
 		boolean successfulLogin = ud.findUser(username, password);
-		
 		return successfulLogin;
-//		if (username.equals("Elizabeth")) {
-//			lv.setVisible(false);
-////			user = new User(1,"Elizabeth","test",0);
-////			HomepageView hv = new HomepageView(user);
-////			hv.setVisible(true);
-//			return true;
-//		} 
-//		else {
-//			return false;
-//		}
 	}
 	
-	
-	
-	
-	
-	
+	public User retrieveUser() {
+		user = ud.retrieveUser(username, password);
+		return user;
+	}
+
 }

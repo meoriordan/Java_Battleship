@@ -23,12 +23,14 @@ public class Server extends JFrame implements Runnable {
 	
 	JTextArea ta;
 	ArrayList<User> activeUsers;
+	ArrayList<Socket> activeSockets;
 
     private int clientNo = 0;
 	
 	public Server() {
 		super("Server");
 		activeUsers = new ArrayList<User>();
+		activeSockets = new ArrayList<Socket>();
 		ta = new JTextArea();
 		this.add(ta);
 
@@ -100,24 +102,24 @@ public class Server extends JFrame implements Runnable {
 		      try {
 		    	  
 		        while (true) {
-//		        	ta.append("this is a test");
-//		        	ta.append(inputFromClient.readUTF());
 		        	String username = inputFromClient.readUTF();
 		        	String password = inputFromClient.readUTF();
 		        	LoginController lc = new LoginController(username, password);
 		        	boolean verify = lc.verifyInfo();
-//		        	ta.append(String.valueOf(verify));
 		        	outputToClient.writeBoolean(verify);
-//		        	if (verify == true) {
-//			        	int totalUsers = activeUsers.size();
-//			        	outputToClient.writeInt(totalUsers);
-//			        	for (User u: activeUsers) {
-//			        		toClientObj.writeObject(u);
-//			        	}
-//			        	activeUsers.add(user);
-//			        	ta.append(user.getUsername());
-//			        	break;
-//		        	}
+		        	
+		        	if (verify == true) {   
+		        		user = lc.retrieveUser();
+		        		toClientObj.writeObject(user);
+			        	int totalUsers = activeUsers.size();
+			        	outputToClient.writeInt(totalUsers);
+			        	for (User u: activeUsers) {
+			        		toClientObj.writeObject(u);
+			        	}
+			        	activeUsers.add(user);
+			        	ta.append(user.getUsername());
+			        	break;
+		        	}
 		        }
 		      }
 		      catch(IOException ex) {
@@ -129,6 +131,13 @@ public class Server extends JFrame implements Runnable {
 		    	  
 		        ex.printStackTrace();
 		        ta.append("Connection lost with client " + this.clientNum + '\n');
+		      }
+		      
+		      boolean connected = false;
+		      while (!connected) {
+		    	  //code for getting a potential match from the client 
+		    	  //using the homepage controller to check if potential match wants to play 
+		    	  //and handling the connection
 		      }
 		      
 		      //blah blah blah code for getting connection info, checking with that user, and reporting back to the first user 

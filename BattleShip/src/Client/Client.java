@@ -90,14 +90,17 @@ public class Client  {
 				lv.setVisible(false);
 				hv = new HomepageView();
 				hv.setVisible(true);
-				
+				Object o = fromServerObj.readObject();
+				user = (User) o;
+				System.out.println(user.getUsername() + " " + user.getPassword() + " " + user.getTotalPoints() + " " + user.getUserID());	
 			}
+		}
+		catch (ClassNotFoundException e) {
+			e.printStackTrace();
 		}
 		catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		System.out.println("USERNAMMME: "+ username + "PASSWORDDDDD: " + password);
 	}
 	
 	public static void main(String[] args) {
