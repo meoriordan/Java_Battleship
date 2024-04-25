@@ -27,17 +27,14 @@ import views.HomepageView;
 import views.LoginView;
 
 
-//connect to server upon opening  or button 
+//connect to server upon opening
 //view login screen upon connecting 
 //view homepage screen upon authentication 
 //view game screen upon connection w another user 
 
-//thread to handle login view 
-//thread to handle homepage view 
-//
 
-//client is getting information from the server, from its views of login and homepage 
-//and from its controllers of login and connect users 
+//client is getting information from the server & from its views (login, homepage, game) 
+
 
 public class Client  {
 	

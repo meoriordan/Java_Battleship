@@ -21,17 +21,14 @@ public class LoginView extends JFrame {
 	public static final int DEFAULT_HEIGHT = 500;
 	private JTextField userNameField;
 	private JTextField passwordField;
-	private LoginController lc;
 	String username;
 	String password;
-	private HashMap<String, String> hm;
 	private Client myClient;
 	
 	public LoginView(Client c) {
 		
 			userNameField = new JTextField("",10);
 			passwordField = new JPasswordField("", 10);
-			hm = new HashMap<String, String>();
 			this.myClient = c;
 			
 			JPanel panel = new JPanel();		
@@ -41,7 +38,6 @@ public class LoginView extends JFrame {
 			panel.add(passwordField);
 			
 			JButton loginButton = new JButton("Login");
-			LoginListener ll = new LoginListener();
 			loginButton.addActionListener(new LoginListener());
 			panel.add(loginButton);
 
@@ -56,17 +52,13 @@ public class LoginView extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			username = userNameField.getText().trim();
 			password = passwordField.getText().trim();
-			
-			System.out.println("USERNAME: " + username + "PASSWORD : " + password);
-			
+						
 			if (username.equals("") || password.equals("")) {
 				return;
 			} 
 			
 			myClient.verifyLogin();
-
-		}
-		
+		}		
 	}
 	
 	public String getUserName() {
@@ -75,7 +67,6 @@ public class LoginView extends JFrame {
 	
 	public String getPassword() {
 		return this.password;
-	}
-			
-		}
+	}		
+}
 

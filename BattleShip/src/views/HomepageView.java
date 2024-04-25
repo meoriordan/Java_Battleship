@@ -29,7 +29,6 @@ public class HomepageView extends JFrame {
 	private Client myClient;
 	
 	public HomepageView(User user, ArrayList<User> onlineUsers, Client myClient) {
-//	public HomepageView() {
 
 			JPanel panel = new JPanel();
 			
@@ -37,21 +36,11 @@ public class HomepageView extends JFrame {
 			this.onlineUsers = onlineUsers;
 			this.myClient = myClient;
 			
-//			for (shiplayout.User u: onlineUsers) {
-//				panel.add(new JLabel(u.getUsername()));
-//			}
-			
 			for (User u: onlineUsers) {
-//				String x = u.getUsername();
-//				System.out.println(u.getUsername());
 				JButton x = new JButton(u.getUsername());
 				panel.add(x);
-				x.addActionListener(new LoginListener());
+				x.addActionListener(new ConnectListener());
 			}
-			JButton loginButton = new JButton("Login");
-			loginButton.addActionListener(new LoginListener());
-			panel.add(loginButton);
-
 			add(panel);
 			setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 	}
@@ -63,17 +52,13 @@ public class HomepageView extends JFrame {
 //	}
 	
 	
-	class LoginListener implements ActionListener {
-
+	class ConnectListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String opponent = ((JButton) e.getSource()).getText();
 	        System.out.println(((JButton) e.getSource()).getText());
 	        myClient.attemptConnection(opponent);
-
-			
-		}
-		  
+		}	  
 	  }
-
+	
 }
