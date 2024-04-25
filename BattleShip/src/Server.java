@@ -1,5 +1,6 @@
 
 import controller.LoginController;
+import controller.RegisterController;
 import models.User;
 
 import java.awt.BorderLayout;
@@ -19,7 +20,14 @@ import java.util.Date;
 
 import javax.swing.*;
 
-import chat.ChatServer.HandleAClient;
+
+/*a single client can: 
+ * register
+ * login 
+ * attempt to connect with another user 
+ * be contacted by another user to play
+ * play a game with another user
+ */
 
 public class Server extends JFrame implements Runnable {
 	
@@ -68,7 +76,6 @@ public class Server extends JFrame implements Runnable {
 	        catch(IOException ex) {
 	          ex.printStackTrace();
 	        } 
-	      
 	}
 	
 	  class HandleAClient implements Runnable {
@@ -116,6 +123,19 @@ public class Server extends JFrame implements Runnable {
 		    		e.printStackTrace();
 		    	}
 
+		    }
+		    
+		    public void attemptRegistration() {
+		    	try {
+		    		String username;
+		    		String password;
+		    		RegisterController rv = new RegisterController(username, password);
+		    		boolean creationSuccessful = rv.createUser();
+		    		outputToClient.writeBoolean(creationSuccessful);
+		    	}
+		    	catch (IOException e ) {
+		    		e.printStackTrace();
+		    	}
 		    }
 		    
 		    public void attemptConnection(User u1, User u2) {

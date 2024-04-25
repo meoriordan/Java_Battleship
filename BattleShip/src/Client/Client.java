@@ -25,6 +25,7 @@ import controller.LoginController;
 import models.User;
 import views.HomepageView;
 import views.LoginView;
+import views.RegisterView;
 
 
 //connect to server upon opening
@@ -51,8 +52,7 @@ public class Client  {
 	
 	LoginView lv;
 	HomepageView hv;
-	LoginController lc;
-	ConnectUsers cu;
+	RegisterView rv;
 	
 	String username;
 	String password;
@@ -62,7 +62,7 @@ public class Client  {
 	public Client() {
 		
 		try {
-			socket = new Socket("192.168.1.182",9898);
+			socket = new Socket("10.18.183.253",9898);
 		    fromServer = new DataInputStream(socket.getInputStream());
 		    toServer = new DataOutputStream(socket.getOutputStream());
 		    
@@ -116,6 +116,29 @@ public class Client  {
 		}
 	}
 	
+	public void switchToRegistration() {
+		lv.setVisible(false);
+		rv = new RegisterView(this);
+		rv.setVisible(true);
+	}
+	
+	public void attemptRegistration(String username, String password) {
+		System.out.println("attempting registration");
+		try {
+			toServer.writeUTF("REGISTER");
+			toServer.writeUTF(username);
+			toServer.writeUTF(password);
+			Boolean success;
+			success = fromServer.readBoolean(); 
+			if (success) {
+				lv.setVisible(true);
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void attemptConnection(String opponent) {
 		for (User u: activeUsers) {
 			if (u.getUsername().equals(opponent)) {
@@ -149,8 +172,6 @@ public class Client  {
 		System.out.println("HERE IN CLIENT");
 		
 //		hv.updateUsers(activeUsers);
-
-		
 	}
 	
 	public static void main(String[] args) {

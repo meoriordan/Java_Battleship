@@ -15,7 +15,7 @@ import java.net.Socket;
 import java.util.HashMap;
 
 
-public class LoginView extends JFrame {
+public class RegisterView extends JFrame {
 	
 	public static final int DEFAULT_WIDTH = 500;
 	public static final int DEFAULT_HEIGHT = 500;
@@ -25,7 +25,7 @@ public class LoginView extends JFrame {
 	String password;
 	private Client myClient;
 	
-	public LoginView(Client c) {
+	public RegisterView(Client c) {
 		
 			userNameField = new JTextField("",10);
 			passwordField = new JPasswordField("", 10);
@@ -37,21 +37,16 @@ public class LoginView extends JFrame {
 			panel.add(new JLabel("Password: "));
 			panel.add(passwordField);
 			
-			JButton loginButton = new JButton("Login");
-			loginButton.addActionListener(new LoginListener());
-			panel.add(loginButton);
-			
 			JButton registerButton = new JButton("Register");
 			registerButton.addActionListener(new RegisterListener());
 			panel.add(registerButton);
-			
 
 			add(panel);
 			setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 	}
 	
 	
-	class LoginListener implements ActionListener {
+	class RegisterListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -62,7 +57,7 @@ public class LoginView extends JFrame {
 				return;
 			} 
 			
-			myClient.verifyLogin();
+			myClient.attemptRegistration(username, password);
 		}		
 	}
 	
@@ -72,14 +67,6 @@ public class LoginView extends JFrame {
 	
 	public String getPassword() {
 		return this.password;
-	}
-	
-	class RegisterListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			myClient.switchToRegistration();	
-		}		
-	}
+	}		
 }
 
