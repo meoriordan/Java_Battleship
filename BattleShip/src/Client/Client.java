@@ -59,6 +59,8 @@ public class Client  {
 	
 	String username;
 	String password;
+	
+	Boolean matched = false;
 
 	public Client() {
 		
@@ -88,11 +90,25 @@ public class Client  {
 			Boolean verify = fromServer.readBoolean();
 			if (verify == true) {
 				lv.setVisible(false);
-				hv = new HomepageView();
-				hv.setVisible(true);
+
 				Object o = fromServerObj.readObject();
 				user = (User) o;
-				System.out.println(user.getUsername() + " " + user.getPassword() + " " + user.getTotalPoints() + " " + user.getUserID());	
+
+				String x1 = fromServer.readUTF();
+				System.out.println("x1: " + x1);
+				int x = fromServer.readInt();
+				System.out.println("XL " + x);
+				activeUsers = new ArrayList<User>();
+				for (int i = 0; i < x; i++) {
+					Object o2 = fromServerObj.readObject();
+					activeUsers.add((User) o2);
+				}
+				
+				hv = new HomepageView(user, activeUsers, this);
+				hv.setVisible(true);	
+				
+
+
 			}
 		}
 		catch (ClassNotFoundException e) {
@@ -101,6 +117,43 @@ public class Client  {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void attemptConnection(String opponent) {
+		for (User u: activeUsers) {
+			if (u.getUsername().equals(opponent)) {
+				try {
+					toServerObj.writeObject(u);
+				} 
+				catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+	}
+	
+	
+	public void updateUsers() {
+		try {
+			int x = fromServer.readInt();
+			activeUsers = new ArrayList<User>();
+			for (int i = 0; i < x; i++) {
+				Object o2 = fromServerObj.readObject();
+				activeUsers.add((User) o2);
+			}	
+		}
+		catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("HERE IN CLIENT");
+		
+//		hv.updateUsers(activeUsers);
+
+		
 	}
 	
 	public static void main(String[] args) {

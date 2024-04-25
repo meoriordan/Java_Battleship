@@ -7,6 +7,8 @@ import controller.ConnectUsers;
 import java.awt.*;
 import javax.swing.*;
 
+import Client.Client;
+
 import java.awt.event.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -24,28 +26,28 @@ public class HomepageView extends JFrame {
 	private ConnectUsers cu;
 	private User user;
 	private ArrayList<User> onlineUsers;
+	private Client myClient;
 	
-//	public HomepageView(User user, ArrayList<User> onlineUsers) {
-	public HomepageView() {
+	public HomepageView(User user, ArrayList<User> onlineUsers, Client myClient) {
+//	public HomepageView() {
 
 			JPanel panel = new JPanel();
 			
-//			this.user = user;
-//			this.onlineUsers = onlineUsers;
+			this.user = user;
+			this.onlineUsers = onlineUsers;
+			this.myClient = myClient;
 			
 //			for (shiplayout.User u: onlineUsers) {
 //				panel.add(new JLabel(u.getUsername()));
 //			}
 			
-//			for (User u: onlineUsers) {
-////				String x = u.getUsername();
-//				JButton x = new JButton(u.getUsername());
-//				panel.add(x);
-//				x.addActionListener(new LoginListener());
-//			}
-//			panel.add(new JLabel("UsER NAME: "));
-//			panel.add(new JLabel("Password: "));
-//			panel.add(new JLabel(user.getUsername()));
+			for (User u: onlineUsers) {
+//				String x = u.getUsername();
+//				System.out.println(u.getUsername());
+				JButton x = new JButton(u.getUsername());
+				panel.add(x);
+				x.addActionListener(new LoginListener());
+			}
 			JButton loginButton = new JButton("Login");
 			loginButton.addActionListener(new LoginListener());
 			panel.add(loginButton);
@@ -54,46 +56,24 @@ public class HomepageView extends JFrame {
 			setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 	}
 	
-	public void setOnlineUsers(ArrayList<User> ou) {
-		this.onlineUsers = ou;
-	}
+//	public void updateUsers(ArrayList<User> ou) {
+//		System.out.println("here in update users");
+//		this.onlineUsers = ou;
+//		this.repaint();
+//	}
 	
 	
 	class LoginListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			boolean loggedIn = false;
-			System.out.println("test");
-//			String username = userNameField.getText().trim();
-//			String password = passwordField.getText().trim();
-			
-//			System.out.println("username: " + username + "password: " + password);
+			String opponent = ((JButton) e.getSource()).getText();
+	        System.out.println(((JButton) e.getSource()).getText());
+	        myClient.attemptConnection(opponent);
 
-//			if (username.equals("") || password.equals("")) {
-//				return;
-			}  
-			
-//			else {
-//				LoginController l1 = new LoginController(username, password, LoginView.this);
-//				boolean loginSuccess = l1.verifyInfo();
-//				if (loginSuccess) {
-//					LoginView.this.setVisible(false);
-//				}	
-//			}
-			
-			
-			//login will pass info to the controller which handles the authentication
-//			try {
-//			    toServer.writeUTF(username);
-//			    toServer.writeUTF(password);
-//			    String success = fromServer.readUTF();
-//			    System.out.println("Success = " + success);
-//			} catch (IOException e1) {
-//				e1.printStackTrace();
-//			}
 			
 		}
 		  
 	  }
 
+}

@@ -19,11 +19,14 @@ import java.util.Date;
 
 import javax.swing.*;
 
+import chat.ChatServer.HandleAClient;
+
 public class Server extends JFrame implements Runnable {
 	
 	JTextArea ta;
 	ArrayList<User> activeUsers;
 	ArrayList<Socket> activeSockets;
+    static ArrayList<HandleAClient> ch = new ArrayList<>();
 
     private int clientNo = 0;
 	
@@ -96,6 +99,37 @@ public class Server extends JFrame implements Runnable {
 			        ta.append("Connection lost with client " + this.clientNum + '\n');
 			      }
 		    }
+		    
+		    public void updateActiveUsers() {
+		    	try {
+			    	for (HandleAClient h: Server.ch) {
+			    		h.outputToClient.writeUTF("UPDATE USERS");
+			    		h.outputToClient.writeInt(Server.ch.size());
+			    		for (HandleAClient h2: Server.ch) {
+			    			h.toClientObj.writeObject(h2.user);
+			    		}
+			    		h.toClientObj.writeObject(h.user);
+			    	}
+			    	
+		    	} 
+		    	catch (IOException e) {
+		    		e.printStackTrace();
+		    	}
+
+		    }
+		    
+		    public void attemptConnection(User u1, User u2) {
+		    	try {
+		    		for (HandleAClient h: Server.ch) {
+		    			if (h.user.getUsername().equals(u2.getUsername())) {
+		    				h.outputToClient.writeUTF("ATTEMPTING CONNECTION");
+		    			}
+		    		}
+		    	} 
+		    	catch (IOException e) {
+		    		e.printStackTrace();	
+		    	}
+		    }
 
 		    
 		    public void run() {
@@ -111,16 +145,29 @@ public class Server extends JFrame implements Runnable {
 		        	if (verify == true) {   
 		        		user = lc.retrieveUser();
 		        		toClientObj.writeObject(user);
-			        	int totalUsers = activeUsers.size();
-			        	outputToClient.writeInt(totalUsers);
-			        	for (User u: activeUsers) {
-			        		toClientObj.writeObject(u);
-			        	}
-			        	activeUsers.add(user);
+			        	Server.ch.add(this);
+			        	updateActiveUsers();
 			        	ta.append(user.getUsername());
 			        	break;
 		        	}
 		        }
+		        	
+	        	while (true) {
+	        		try {
+		        		Object o = fromClientObj.readObject();
+		        		User u = (User) o;
+		        		ta.append("THIS IS THE OPPONENT" + u.getUsername());
+		        		attemptConnection(this.user, u);
+	        		} 
+	        		catch (ClassNotFoundException e) {
+	        			e.printStackTrace();
+	        		}
+
+	        		
+	        	}
+		        
+		        
+//		        while (true) 
 		      }
 		      catch(IOException ex) {
 		    	  for (User u: activeUsers) {
@@ -133,12 +180,12 @@ public class Server extends JFrame implements Runnable {
 		        ta.append("Connection lost with client " + this.clientNum + '\n');
 		      }
 		      
-		      boolean connected = false;
-		      while (!connected) {
-		    	  //code for getting a potential match from the client 
-		    	  //using the homepage controller to check if potential match wants to play 
-		    	  //and handling the connection
-		      }
+//		      boolean connected = false;
+//		      while (!connected) {
+//		    	  //code for getting a potential match from the client 
+//		    	  //using the homepage controller to check if potential match wants to play 
+//		    	  //and handling the connection
+//		      }
 		      
 		      //blah blah blah code for getting connection info, checking with that user, and reporting back to the first user 
 		      //maybe the server stores a hash map of socket + users; going through the list of active users it checks to find the one this user wants to connect with 
@@ -147,6 +194,9 @@ public class Server extends JFrame implements Runnable {
 		      //once the game is started the server also needs to take these two users and start the game with them 
 		    }
 		  }
+	  
+		  
+		 
 	
 	public static void main(String[] args) {
 		Server server = new Server();
