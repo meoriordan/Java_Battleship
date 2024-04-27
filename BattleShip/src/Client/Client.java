@@ -58,11 +58,13 @@ public class Client  {
 	String password;
 	
 	Boolean matched = false;
+	Thread userListHandle;
 
 	public Client() {
 		
 		try {
-			socket = new Socket("10.18.183.253",9898);
+			socket = new Socket("10.16.208.75",9898);
+//			socket.setSoTimeout(10000);
 		    fromServer = new DataInputStream(socket.getInputStream());
 		    toServer = new DataOutputStream(socket.getOutputStream());
 		    
@@ -78,6 +80,7 @@ public class Client  {
 		}
 	}
 	
+	//function to verify login info by sending to server and receiving a response
 	public void verifyLogin() {
 		
 		username = lv.getUserName();
@@ -89,14 +92,14 @@ public class Client  {
 			Boolean verify = fromServer.readBoolean();
 			if (verify == true) {
 				lv.setVisible(false);
-
+				
 				Object o = fromServerObj.readObject();
 				user = (User) o;
+
 
 				String x1 = fromServer.readUTF();
 				System.out.println("x1: " + x1);
 				int x = fromServer.readInt();
-				System.out.println("XL " + x);
 				activeUsers = new ArrayList<User>();
 				for (int i = 0; i < x; i++) {
 					Object o2 = fromServerObj.readObject();
@@ -104,7 +107,16 @@ public class Client  {
 				}
 
 				hv = new HomepageView(user, activeUsers, this);
-				hv.setVisible(true);	
+				hv.setVisible(true);
+				
+				
+//				String message = fromServer.readUTF();
+
+//				System.out.println(message);
+//				
+				userListHandle = new Thread(new UpdatesFromServer());
+				userListHandle.start();
+				
 			}
 		}
 		catch (ClassNotFoundException e) {
@@ -115,12 +127,14 @@ public class Client  {
 		}
 	}
 	
+	//when a user choose register switch to that screen
 	public void switchToRegistration() {
 		lv.setVisible(false);
 		rv = new RegisterView(this);
 		rv.setVisible(true);
 	}
 	
+	//function to register a user by sending their username and password to the client and receiving a response
 	public void attemptRegistration(String username, String password) {
 		System.out.println("attempting registration");
 		try {
@@ -131,6 +145,7 @@ public class Client  {
 			success = fromServer.readBoolean(); 
 			if (success) {
 				lv.setVisible(true);
+				rv.setVisible(false);
 			}
 		}
 		catch (IOException e) {
@@ -138,18 +153,85 @@ public class Client  {
 		}
 	}
 	
+	class UpdatesFromServer implements Runnable {
+		
+		public void run() {
+			try {
+				
+				while(true) {
+					System.out.println("HERE in client " + user.getUsername());
+//					try {
+//						Thread.sleep(10000);
+//					}
+//					catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+					String message = fromServer.readUTF();
+  
+				
+					if (message.equals("UPDATE USERS")) {
+						System.out.println("HERE in client");
+//
+						int x = fromServer.readInt();
+						activeUsers = new ArrayList<User>();
+						for (int i = 0; i < x; i++) {
+							Object o2 = fromServerObj.readObject();
+							activeUsers.add((User) o2);
+						}
+						hv.refreshUserList(activeUsers);
+						
+					} else if (message.equals("ATTEMPTING CONNECTION")) {
+						String opponent = fromServer.readUTF();
+						String response = hv.receivedConnectionRequest(opponent);
+						System.out.println(response);
+						try {
+							Thread.sleep(10000);
+						}
+						catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						toServer.writeUTF(response);
+						toServer.flush();
+
+
+						System.out.println("sent response");
+
+					}
+				}
+				
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+			
+		}
+	}
+	
+	
 	public void attemptConnection(String opponent) {
-		for (User u: activeUsers) {
-			if (u.getUsername().equals(opponent)) {
-				try {
-					toServerObj.writeObject(u);
-				} 
-				catch (IOException e) {
-					e.printStackTrace();
+		System.out.println("CHECKPOINT");
+		try {
+			toServer.writeUTF("CONNECT");
+			toServerObj.writeObject(user);
+			for (User u: activeUsers) {
+				if (u.getUsername().equals(opponent)) {
+					try {
+						toServerObj.writeObject(u);
+					} 
+					catch (IOException e) {
+						e.printStackTrace();
+					}
+
 				}
 			}
 		}
-		
+		catch (IOException e) {
+			e.printStackTrace();
+		}	
 	}
 	
 	
@@ -168,7 +250,6 @@ public class Client  {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("HERE IN CLIENT");
 	}
 	
 	public static void main(String[] args) {

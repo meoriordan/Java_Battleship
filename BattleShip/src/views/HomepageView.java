@@ -27,22 +27,51 @@ public class HomepageView extends JFrame {
 	private User user;
 	private ArrayList<User> onlineUsers;
 	private Client myClient;
+	JPanel panel;
 	
 	public HomepageView(User user, ArrayList<User> onlineUsers, Client myClient) {
 
-			JPanel panel = new JPanel();
+			panel = new JPanel();
+			
+	
 			
 			this.user = user;
 			this.onlineUsers = onlineUsers;
 			this.myClient = myClient;
+			setTitle(user.getUsername());
 			
 			for (User u: onlineUsers) {
+				if (u.getUsername().equals(user.getUsername())) {
+					continue;
+				}
+				else {
+					JButton x = new JButton(u.getUsername());
+					panel.add(x);
+					x.addActionListener(new ConnectListener());
+				}
+			}
+			add(panel);
+			setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+	}
+	
+	
+	public void refreshUserList(ArrayList<User> onlineUsers) {
+		panel.removeAll();
+		System.out.println("HERE INS UPDATE UESRS");
+		for (User u: onlineUsers) {
+			if (u.getUsername().equals(user.getUsername())) {
+				continue;
+			}
+			else {
 				JButton x = new JButton(u.getUsername());
 				panel.add(x);
 				x.addActionListener(new ConnectListener());
 			}
-			add(panel);
-			setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+		}
+		panel.revalidate();
+		panel.repaint();
+		
+		
 	}
 	
 //	public void updateUsers(ArrayList<User> ou) {
@@ -60,5 +89,22 @@ public class HomepageView extends JFrame {
 	        myClient.attemptConnection(opponent);
 		}	  
 	  }
+	
+	public String receivedConnectionRequest(String opponentName) {
+		String[] options = new String[] {"accept","deny"};
+		String username = "joe";
+		int n = JOptionPane.showOptionDialog(null,
+			    ("New game request from "+opponentName+". Accept?"),
+			    ("GAME REQUSET TO " + username),
+			    JOptionPane.YES_NO_OPTION,
+			    JOptionPane.QUESTION_MESSAGE,
+			    null,     //do not use a custom Icon
+			    options,  //the titles of buttons
+			    options[0]); //default button title
+		String response = options[n];
+//		System.out.println("USER CHOSE "+response);
+		return response;
+	}
+
 	
 }

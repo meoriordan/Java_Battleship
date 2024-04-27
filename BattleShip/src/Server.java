@@ -107,17 +107,21 @@ public class Server extends JFrame implements Runnable {
 			      }
 		    }
 		    
+		
 		    public void updateActiveUsers() {
 		    	try {
 			    	for (HandleAClient h: Server.ch) {
-			    		h.outputToClient.writeUTF("UPDATE USERS");
+//			    		ta.append("x" + Server.ch.size());
+//						DataOutputStream out = new DataOutputStream(h.socket.getOutputStream());
+						h.outputToClient.writeUTF("UPDATE USERS");
+//			    		h.outputToClient.flush();
+			    		ta.append(h.user.getUsername());
 			    		h.outputToClient.writeInt(Server.ch.size());
 			    		for (HandleAClient h2: Server.ch) {
 			    			h.toClientObj.writeObject(h2.user);
 			    		}
-			    		h.toClientObj.writeObject(h.user);
-			    	}
-			    	
+//			    		h.toClientObj.writeObject(h.user);
+			    	}    	
 		    	} 
 		    	catch (IOException e) {
 		    		e.printStackTrace();
@@ -149,13 +153,12 @@ public class Server extends JFrame implements Runnable {
 		        	outputToClient.writeBoolean(verify);
 		        	
 		        	if (verify == true) {   
-//			    		ta.append("ATTEMPTION LOGIN");
 
 		        		user = lc.retrieveUser();
 		        		toClientObj.writeObject(user);
 			        	Server.ch.add(this);
 			        	updateActiveUsers();
-//			        	ta.append(user.getUsername());
+			        	
 		        	}
 		    	}
 		    	catch (IOException e) {
@@ -167,16 +170,38 @@ public class Server extends JFrame implements Runnable {
 		    	
 		    }
 		    
-		    public void attemptConnection(User u1, User u2) {
+		    public void attemptConnection() {
 		    	try {
+		    		Object o1 = fromClientObj.readObject();
+		    		Object o2 = fromClientObj.readObject();
+		    		User u1 = (User) o1;
+		    		User u2 = (User) o2;
+//		    		ta.append("got objects");
+		    		String response = null;
+		    		HandleAClient opponent = null;
 		    		for (HandleAClient h: Server.ch) {
 		    			if (h.user.getUsername().equals(u2.getUsername())) {
+		    				ta.append("ATTEMPTING connection with" + u2.getUsername());
 		    				h.outputToClient.writeUTF("ATTEMPTING CONNECTION");
+		    				h.outputToClient.writeUTF(u1.getUsername());
+		    				ta.append("waiting for response");
+		    				response = h.inputFromClient.readUTF();
+		    				ta.append("got response");
+
+
 		    			}
 		    		}
+		    		ta.append("here");
+//    				response = opponent.inputFromClient.readUTF();
+    				
+		    		ta.append("THE RESPONSE IS:  "+ response);
+		    		
 		    	} 
 		    	catch (IOException e) {
 		    		e.printStackTrace();	
+		    	}
+		    	catch (ClassNotFoundException e) {
+		    		e.printStackTrace();
 		    	}
 		    }
 		    
@@ -187,15 +212,18 @@ public class Server extends JFrame implements Runnable {
 		    			String action = inputFromClient.readUTF();
 		    			if (action.equals("REGISTER")) {
 		    				attemptRegistration();
-		    				//registration function called
 		    			}
 		    			else if (action.equals("LOGIN")) {
 		    				attemptLogin();
-		    				//login function called
+		    				ta.append("send");
+//		    				outputToClient.writeUTF("testing123");
 		    			} 
 		    			else if (action.equals("CONNECT")) {
+		    				ta.append("CONNECTING");
+		    				attemptConnection();
 		    				//connection function called
-		    			}
+		    			} 
+		    			
 		    		}
 		    	}
 		    	catch (IOException e) {
