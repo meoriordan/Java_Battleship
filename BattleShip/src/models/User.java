@@ -1,12 +1,16 @@
 package models;
 
+import dao.UserDao;
 
-public class User {
+
+public class User implements java.io.Serializable {
+	private static final long serialVersionUID = -6087525416065540507L;
 	
 	private int userID;
 	private String username;
 	private String password;
 	private int totalPoints;
+	private static UserDao ud = new UserDao();
 	
 	public User(int userID, String username, String password, int totalPoints) {
 		this.userID = userID;
