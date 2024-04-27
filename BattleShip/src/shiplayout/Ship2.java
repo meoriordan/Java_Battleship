@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 import javax.swing.JComponent;
 
-public class Ship extends Rectangle{
+public class Ship2 extends Rectangle{
 	private static ArrayList<String> SHIPS = new ArrayList<String>(Arrays.asList("Carrier","Battleship","Cruiser","Submarine","Destroyer"));
 	private static ArrayList<Integer> LENGTHS = new ArrayList<Integer>(Arrays.asList(5,4,3,3,2));
 	private String shipType;
@@ -22,7 +22,7 @@ public class Ship extends Rectangle{
 	private int height;
 	private Dimension d;
 	
-	public Ship(String type,int x, int y) {
+	public Ship2(String type,int x, int y) {
 		this.shipType = type;
 		if(shipType == "Carrier") {
 			shipLength = 5;
@@ -83,6 +83,10 @@ public class Ship extends Rectangle{
 
 	@Override
 	public String toString() {
+		return shipType;
+	}
+	
+	public String getShipType() {
 		return shipType;
 	}
 	
