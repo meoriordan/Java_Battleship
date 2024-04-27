@@ -3,6 +3,7 @@ package controller;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,7 +18,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 
 import models.Board;
 import models.Grid;
@@ -42,12 +45,13 @@ public class PlayGameClient {
 	private static final String GRIDSEND = "GRIDSEND";
 	private static final String LOST = "LOST"; //IF I receive this I won
 	private static final String WIN = "WIN"; //IF I receive this I lost
+	//private static final String START = "START";//start game
 	private Boolean gameOver;
-	private static final String TURN = "TURN"; //give or take turn
+	//private static final String TURN = "TURN"; //give or take turn
 	private int positionOnThisTurn;
 	private int DELAY = 50;
 	
-	public PlayGameClient(User user, User opponent,int gameID,Boolean turn,Socket socket) {
+	public PlayGameClient(User user, User opponent,int gameID,Boolean turn,Socket serverSocket) {
 		this.opponent = opponent;
 		this.user = user;
 		this.serverSocket = serverSocket;
@@ -103,25 +107,28 @@ public class PlayGameClient {
 					
 					if(message.equals(LISTENING)) {
 						objectToServer.writeObject(finalShipLocations);
+						objectToServer.flush();
 						sent = true;
 					}
 					else if(message.equals(GRIDSEND)){
-						//objectFromServer.readObject();
-						//setToOpponent Grid on Board
-						//should receive an object save type as final ship locations
-						myBoard.initializeOpponentGrid((HashMap<String, ArrayList<Integer>>) objectFromServer.readObject());
-						received = true;
+						HashMap<String, ArrayList<Integer>> opponentEntries = (HashMap<String, ArrayList<Integer>>) objectFromServer.readObject();
+						if(opponentEntries != null) {
+							received = true;
+							myBoard.initializeOpponentGrid(opponentEntries);
+						}
 					}
 					else if(!sent){
 						primToServer.writeUTF(SAVED);
 					}
 					else if(sent & received) {
+						
 						break;
-					}
-					
+					}	
 				}
 				
 				startGamePlay();
+				objectToServer.close();
+				objectFromServer.close();
 				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -131,9 +138,7 @@ public class PlayGameClient {
 				//IF the object received cannot be cast to HashMap<String,<ArrayList<Integer>>
 				e.printStackTrace();
 			}
-			
 		}
-		
 	}
 	
 	public void startGamePlay() {
@@ -148,15 +153,17 @@ public class PlayGameClient {
 			try {
 				DataOutputStream primToServer = new DataOutputStream(serverSocket.getOutputStream());
 				DataInputStream primFromServer = new DataInputStream(serverSocket.getInputStream());
-	
+				String message = primFromServer.readUTF();
 				while(!gameOver) {
-					String message = primFromServer.readUTF();
+					
 					if(message.equals(WIN)) {
 						gameOver = true;
+						continue;
 					}
 					else if(message.equals(LOST)) {
 						gameOver = true;
-						user.winGame();
+						winGame();
+						continue;
 					}
 					else if(turn) {
 						takeTurn();
@@ -164,6 +171,7 @@ public class PlayGameClient {
 							
 							if(positionOnThisTurn > 0) { //idk how else to wait until the player hits a button
 								primToServer.writeInt(positionOnThisTurn);
+								primToServer.flush();
 								if(message.equals(SAVED)) { //make the server acknowledge receipt of the guess
 									turn = false;
 									positionOnThisTurn = -1;
@@ -203,22 +211,77 @@ public class PlayGameClient {
 						if(myBoard.checkPlayerGridScore()==17) {
 							while(true) {
 								primToServer.writeUTF(LOST); //I LOST
+								primToServer.flush();
 								message = primFromServer.readUTF();
 								if(message.equals(WIN)) {
 									break; // acknowledgement that the server knows the game is over
 								}
 							}
 							gameOver = true;
+						}else {
+							primToServer.writeUTF(SAVED);
+							primToServer.flush();
 						}
+						message = primFromServer.readUTF();
 					}
 				}
+				primToServer.close();
+				primFromServer.close();
+				//endGame();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
 		}
 		
+	}
+	
+	public void endGame() {
+		//something about telling the original client to put back up the list of players!
+		frame.dispose();
+	}
+	public void winGame() {
+		user.winGame();
+		JDialog dialog = new JDialog();
+		dialog.setTitle(user.getUsername() + ", you won!");
+		dialog.setLayout(new FlowLayout());
+		
+		
+		
+		JLabel label = new JLabel("You won!");
+		dialog.add(label);
+		
+		JButton okButton = new JButton("OK");
+		okButton.setSize(80,50);
+		okButton.addActionListener(e -> {dialog.dispose();endGame();});
+		dialog.add(okButton);
+		
+		dialog.setSize(400,100);
+		dialog.setLocationRelativeTo(null);
+		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialog.setVisible(true);
+		
+	}
+	
+	public void loseGame(){
+		JDialog dialog = new JDialog();
+		dialog.setTitle(user.getUsername() + ", you lost.");
+		dialog.setLayout(new FlowLayout());
+		
+		JLabel label = new JLabel("You lost.");
+		dialog.add(label);
+			
+		
+		JButton okButton = new JButton("OK");
+		okButton.setSize(80,50);
+		okButton.addActionListener(e -> {dialog.dispose();endGame();});
+		dialog.add(okButton);
+		
+		dialog.setSize(400,100);
+		dialog.setLocationRelativeTo(null);
+		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialog.setVisible(true);
+	
 	}
 	
 	public void addButtonGrid() {
@@ -234,13 +297,11 @@ public class PlayGameClient {
 	}
 	
 	public void takeTurn() {
-		bg.enableButtonGrid();
-		
+		bg.enableButtonGrid();	
 	}
 	
 	public void giveTurn(JButton button, int position) {
-		//send the button that was pushed through the server to the oppopnent
-		
+		positionOnThisTurn = position;
 		bg.disableButtonGrid();
 		if(myBoard.opponentHitOrMiss(position)==1){
 			button.setBackground(Color.RED);
@@ -254,7 +315,7 @@ public class PlayGameClient {
 
 	 
 	public static void main(String args[]) throws UnknownHostException, IOException {
-		//PlayGameClient pgc = new PlayGameClient(new User(1,"Odette","pass123",0),new User(2,"Elizabeth","pass321",0),1,true);
+	//	PlayGameClient pgc = new PlayGameClient(new User(1,"Odette","pass123",0),new User(2,"Elizabeth","pass321",0),1,true);
 	
 	}
 	

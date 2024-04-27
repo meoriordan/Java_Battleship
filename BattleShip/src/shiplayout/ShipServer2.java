@@ -25,7 +25,7 @@ public class ShipServer2 extends JFrame implements Runnable{
 	private JTextArea ta;
 	private int clientNo = 0;
 	//private ServerSocket serverSocket;
-	private static final ExecutorService executorService = Executors.newFixedThreadPool(10);
+	//private static final ExecutorService executorService = Executors.newFixedThreadPool(10);
 	private final static String GAMEREQUEST = "GAMEREQUEST";
 	private final static String ACCEPT = "Accept";
 	private final static String DENY = "Deny";
