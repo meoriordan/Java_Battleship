@@ -91,16 +91,7 @@ public class ShipClient extends JFrame{
 		remove(scrollPane);
 		setVisible(false);
 		//PlayGameClient()
-//		setTitle(username + " vs. "+opponent);
-//		SnapGrid sg = new SnapGrid();
-//		ButtonGrid bg = new ButtonGrid(sg);
-//		setLayout(new BorderLayout());
-//		add(sg,BorderLayout.EAST);
-//		add(bg,BorderLayout.CENTER);
-//		setSize(new Dimension(1000,1000));
-//		setVisible(true);
-//		setLocationRelativeTo(null);
-//		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
 	}
 	
 	
