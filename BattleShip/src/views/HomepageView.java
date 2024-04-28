@@ -57,7 +57,6 @@ public class HomepageView extends JFrame {
 	
 	public void refreshUserList(ArrayList<User> onlineUsers) {
 		panel.removeAll();
-		System.out.println("HERE INS UPDATE UESRS");
 		for (User u: onlineUsers) {
 			if (u.getUsername().equals(user.getUsername())) {
 				continue;
@@ -92,7 +91,7 @@ public class HomepageView extends JFrame {
 	
 	public String receivedConnectionRequest(String opponentName) {
 		String[] options = new String[] {"accept","deny"};
-		String username = "joe";
+		String username = user.getUsername();
 		int n = JOptionPane.showOptionDialog(null,
 			    ("New game request from "+opponentName+". Accept?"),
 			    ("GAME REQUSET TO " + username),

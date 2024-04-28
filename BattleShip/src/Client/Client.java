@@ -63,7 +63,7 @@ public class Client  {
 	public Client() {
 		
 		try {
-			socket = new Socket("10.16.208.75",9898);
+			socket = new Socket("192.168.1.182",9898);
 //			socket.setSoTimeout(10000);
 		    fromServer = new DataInputStream(socket.getInputStream());
 		    toServer = new DataOutputStream(socket.getOutputStream());
@@ -181,18 +181,21 @@ public class Client  {
 						hv.refreshUserList(activeUsers);
 						
 					} else if (message.equals("ATTEMPTING CONNECTION")) {
+						toServer.writeUTF("considering request");
 						String opponent = fromServer.readUTF();
 						String response = hv.receivedConnectionRequest(opponent);
 						System.out.println(response);
-						try {
-							Thread.sleep(10000);
-						}
-						catch (InterruptedException e) {
-							e.printStackTrace();
-						}
+//						try {
+//							Thread.sleep(20000);
+//						}
+//						catch (InterruptedException e) {
+//							e.printStackTrace();
+//						}
+//						System.out.println(response);
+//						toServer.writeUTF("ok");
+//						toServer.flush();
+//						System.out.println(fromServer.readUTF());
 						toServer.writeUTF(response);
-						toServer.flush();
-
 
 						System.out.println("sent response");
 
@@ -213,7 +216,6 @@ public class Client  {
 	
 	
 	public void attemptConnection(String opponent) {
-		System.out.println("CHECKPOINT");
 		try {
 			toServer.writeUTF("CONNECT");
 			toServerObj.writeObject(user);

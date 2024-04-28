@@ -170,46 +170,53 @@ public class Server extends JFrame implements Runnable {
 		    	
 		    }
 		    
-		    public void attemptConnection() {
-		    	try {
-		    		Object o1 = fromClientObj.readObject();
-		    		Object o2 = fromClientObj.readObject();
-		    		User u1 = (User) o1;
-		    		User u2 = (User) o2;
-//		    		ta.append("got objects");
-		    		String response = null;
-		    		HandleAClient opponent = null;
-		    		for (HandleAClient h: Server.ch) {
-		    			if (h.user.getUsername().equals(u2.getUsername())) {
-		    				ta.append("ATTEMPTING connection with" + u2.getUsername());
-		    				h.outputToClient.writeUTF("ATTEMPTING CONNECTION");
-		    				h.outputToClient.writeUTF(u1.getUsername());
-		    				ta.append("waiting for response");
-		    				response = h.inputFromClient.readUTF();
-		    				ta.append("got response");
-
-
-		    			}
-		    		}
-		    		ta.append("here");
-//    				response = opponent.inputFromClient.readUTF();
-    				
-		    		ta.append("THE RESPONSE IS:  "+ response);
-		    		
-		    	} 
-		    	catch (IOException e) {
-		    		e.printStackTrace();	
-		    	}
-		    	catch (ClassNotFoundException e) {
-		    		e.printStackTrace();
-		    	}
-		    }
+//		    public void attemptConnection() {
+//		    	try {
+//		    		Object o1 = fromClientObj.readObject();
+//		    		Object o2 = fromClientObj.readObject();
+//		    		User u1 = (User) o1;
+//		    		User u2 = (User) o2;
+//		    		
+//		    		String response;
+//		    		HandleAClient opponent = null;
+//		    		for (HandleAClient h: Server.ch) {
+//		    			if (h.user.getUsername().equals(u2.getUsername())) {
+//		    				opponent = h;
+//		    			}
+//		    		}
+//		    		
+//    				ta.append("ATTEMPTING connection with" + u2.getUsername());
+//    				opponent.outputToClient.writeUTF("ATTEMPTING CONNECTION");
+//    				opponent.outputToClient.writeUTF(u1.getUsername());
+//    				ta.append("\nresponse is coming from " + opponent.user.getUsername());
+////    				ta.append("waiting for response1");
+////    				ta.append("waiting for response2");
+////    				ta.append("waiting for response3");
+//    				ta.append("waiting waiting  response");
+//    				opponent.outputToClient.writeUTF("OK TESTING 1234");
+//    				ta.append(opponent.inputFromClient.readUTF());
+////    				response = opponent.inputFromClient.readUTF();
+//    				
+//    				ta.append("got response");
+//    				
+////		    		ta.append("THE RESPONSE IS:  "+ response);
+//		    		
+//		    	} 
+//		    	catch (IOException e) {
+//		    		e.printStackTrace();	
+//		    	}
+//		    	catch (ClassNotFoundException e) {
+//		    		e.printStackTrace();
+//		    	}
+//		    }
 		    
 		    
 		    public void run() {
 		    	try {
 		    		while (true) {
+		    			
 		    			String action = inputFromClient.readUTF();
+		    			ta.append("heres my action: " + action);
 		    			if (action.equals("REGISTER")) {
 		    				attemptRegistration();
 		    			}
@@ -218,11 +225,49 @@ public class Server extends JFrame implements Runnable {
 		    				ta.append("send");
 //		    				outputToClient.writeUTF("testing123");
 		    			} 
-		    			else if (action.equals("CONNECT")) {
-		    				ta.append("CONNECTING");
-		    				attemptConnection();
+		    			else if (action.equals("CONNECT")) { 
+		    				try {
+			    				ta.append("CONNECTING");
+					    		Object o1 = fromClientObj.readObject();
+					    		Object o2 = fromClientObj.readObject();
+					    		User u1 = (User) o1;
+					    		User u2 = (User) o2;
+//					    		
+					    		String response;
+					    		HandleAClient opponent = null;
+					    		for (HandleAClient h: Server.ch) {
+					    			if (h.user.getUsername().equals(u2.getUsername())) {
+					    				opponent = h;
+					    			}
+					    		}
+					    		ta.append("GOT THE OPPOnent \n");
+			    				opponent.outputToClient.writeUTF("ATTEMPTING CONNECTION");
+			    				opponent.outputToClient.writeUTF(u1.getUsername());
+			    				response = opponent.inputFromClient.readUTF();
+			    				ta.append("RESPONSE: " + response);
+		    					
+		    				} 
+		    				catch (IOException e) {
+		    					e.printStackTrace();
+		    				}
+		    				catch (ClassNotFoundException e) {
+		    					e.printStackTrace();
+		    				}
+
+//	    				else if (action.equals("CONNECT RESPONSE")) {
+	    					
+//	    				}
+
 		    				//connection function called
-		    			} 
+		    			} else if (action.equals("considering request")) {
+		    				try {
+			    				wait(30000);
+		    				}
+		    				catch (InterruptedException e) {
+		    					e.printStackTrace();
+		    				}
+
+		    			}
 		    			
 		    		}
 		    	}
