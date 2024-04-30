@@ -24,8 +24,8 @@ public class Game {
 		this.user1 = user1;
 //		score0 = 0;
 //		score1 = 0;
-		//board0 = new Board(this.gameID, user0.getUserID());
-		//board1 = new Board(this.gameID, user1.getUserID());
+		board0 = new Board(this.gameID, user0.getUserID());
+		board1 = new Board(this.gameID, user1.getUserID());
 		
 		//Set boards as each others opponent
 		//board0.setOpponent(board1.getPlayerGrid());
@@ -78,6 +78,7 @@ public class Game {
 	}
 	
 	public void takeTurn(User u) {
+		//maybe user passes it's selection here and this function updates the boards?
 		//something to do with boards
 		//user places peg on grid where there is not already a peg (this happens on both boards)
 		//check if game is won 	

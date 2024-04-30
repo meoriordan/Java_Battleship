@@ -26,6 +26,7 @@ import models.User;
 import views.HomepageView;
 import views.LoginView;
 import views.RegisterView;
+import views.ShipView;
 
 
 //connect to server upon opening
@@ -53,6 +54,7 @@ public class Client  {
 	LoginView lv;
 	HomepageView hv;
 	RegisterView rv;
+	ShipView sv;
 	
 	String username;
 	String password;
@@ -64,7 +66,6 @@ public class Client  {
 		
 		try {
 			socket = new Socket("192.168.1.182",9898);
-//			socket.setSoTimeout(10000);
 		    fromServer = new DataInputStream(socket.getInputStream());
 		    toServer = new DataOutputStream(socket.getOutputStream());
 		    
@@ -85,8 +86,9 @@ public class Client  {
 		
 		username = lv.getUserName();
 		password = lv.getPassword();
+		
 		try {
-			toServer.writeUTF("LOGIN");
+			toServer.writeUTF("LOGIN"); //server function message
 			toServer.writeUTF(username);
 			toServer.writeUTF(password);
 			Boolean verify = fromServer.readBoolean();
@@ -96,9 +98,7 @@ public class Client  {
 				Object o = fromServerObj.readObject();
 				user = (User) o;
 
-
-				String x1 = fromServer.readUTF();
-				System.out.println("x1: " + x1);
+				String x1 = fromServer.readUTF(); //client function message
 				int x = fromServer.readInt();
 				activeUsers = new ArrayList<User>();
 				for (int i = 0; i < x; i++) {
@@ -108,15 +108,10 @@ public class Client  {
 
 				hv = new HomepageView(user, activeUsers, this);
 				hv.setVisible(true);
-				
-				
-//				String message = fromServer.readUTF();
-
-//				System.out.println(message);
-//				
+			    hv.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+						
 				userListHandle = new Thread(new UpdatesFromServer());
 				userListHandle.start();
-				
 			}
 		}
 		catch (ClassNotFoundException e) {
@@ -134,11 +129,10 @@ public class Client  {
 		rv.setVisible(true);
 	}
 	
-	//function to register a user by sending their username and password to the client and receiving a response
+	//function to register a user by sending their username and password to the server and receiving a response
 	public void attemptRegistration(String username, String password) {
-		System.out.println("attempting registration");
 		try {
-			toServer.writeUTF("REGISTER");
+			toServer.writeUTF("REGISTER"); //server function message
 			toServer.writeUTF(username);
 			toServer.writeUTF(password);
 			Boolean success;
@@ -157,60 +151,24 @@ public class Client  {
 		
 		public void run() {
 			try {
-				
 				while(true) {
-					System.out.println("HERE in client " + user.getUsername());
-//					try {
-//						Thread.sleep(10000);
-//					}
-//					catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}
-					String message = fromServer.readUTF();
-  
-				
-					if (message.equals("UPDATE USERS")) {
-						System.out.println("HERE in client");
-//
-						int x = fromServer.readInt();
-						activeUsers = new ArrayList<User>();
-						for (int i = 0; i < x; i++) {
-							Object o2 = fromServerObj.readObject();
-							activeUsers.add((User) o2);
-						}
-						hv.refreshUserList(activeUsers);
-						
-					} else if (message.equals("ATTEMPTING CONNECTION")) {
+					String message = fromServer.readUTF(); //client function message
+					System.out.println(message + "message in the main loop :(");
+					if (message.equals("UPDATE USERS")) { //client function message
+						updateUsers();					
+					} else if (message.equals("ATTEMPTING CONNECTION")) { //client function message
 						toServer.writeUTF("considering request");
 						String opponent = fromServer.readUTF();
 						String response = hv.receivedConnectionRequest(opponent);
-						System.out.println(response);
-//						try {
-//							Thread.sleep(20000);
-//						}
-//						catch (InterruptedException e) {
-//							e.printStackTrace();
-//						}
-//						System.out.println(response);
-//						toServer.writeUTF("ok");
-//						toServer.flush();
-//						System.out.println(fromServer.readUTF());
 						toServer.writeUTF(response);
-
-						System.out.println("sent response");
-
-					}
+						toServer.flush();
+						startGame(opponent);
+					} 
 				}
-				
 			}
 			catch (IOException e) {
 				e.printStackTrace();
 			}
-
-			catch (ClassNotFoundException e) {
-				e.printStackTrace();
-			}
-			
 		}
 	}
 	
@@ -219,17 +177,21 @@ public class Client  {
 		try {
 			toServer.writeUTF("CONNECT");
 			toServerObj.writeObject(user);
-			for (User u: activeUsers) {
-				if (u.getUsername().equals(opponent)) {
-					try {
-						toServerObj.writeObject(u);
-					} 
-					catch (IOException e) {
-						e.printStackTrace();
+				try {
+					toServer.writeUTF(opponent);
+					System.out.println("RIGHT HERE" + user.getUsername());
+					toServer.writeUTF("ha ha ha ");
+					
+					String response = fromServer.readUTF();
+					if (response.equals("accept")) {
+						System.out.println("GAME ACCEPTED!");
+						startGame(opponent);
 					}
-
+				} 
+				catch (IOException e) {
+					e.printStackTrace();
 				}
-			}
+
 		}
 		catch (IOException e) {
 			e.printStackTrace();
@@ -244,7 +206,8 @@ public class Client  {
 			for (int i = 0; i < x; i++) {
 				Object o2 = fromServerObj.readObject();
 				activeUsers.add((User) o2);
-			}	
+			}
+			hv.refreshUserList(activeUsers);
 		}
 		catch (ClassNotFoundException e) {
 			e.printStackTrace();
@@ -252,6 +215,13 @@ public class Client  {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	
+	public void startGame(String opponent) {
+		hv.setVisible(false);
+		sv = new ShipView();
+		sv.setVisible(true);
 	}
 	
 	public static void main(String[] args) {
