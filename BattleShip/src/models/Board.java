@@ -17,6 +17,7 @@ public class Board {
 	private String opponentName;
 	private int gameID;
 	private String username;
+	private int userID;
 	//private boolean savedShipLocation;
 	private HashMap<String,ArrayList<Integer>> finalShipLocations;
 	private ArrayList<Ship> ships;
@@ -34,11 +35,12 @@ public class Board {
 	}
 
 	
-	public Board(int gameID, String username,String opponentName) {
+	public Board(int gameID, int userID) {
 		this.boardID = boardIDs++;
 		this.gameID = gameID;
-		this.username = username;
-		this.opponentName = opponentName;
+		this.userID = userID;
+//		this.username = username;
+//		this.opponentName = opponentName;
 		//savedShipLocation = false;
 		playerGrid = new Grid(this.boardID);
 		opponentGrid = new Grid(this.boardID);
@@ -52,6 +54,16 @@ public class Board {
 		
 		for (String s: shipTypes.keySet()) {
 			ships.add(new Ship(this.boardID,s,shipTypes.get(s)));
+		}
+	}
+	
+	public Boolean checkHit(int pos) {
+		int value = playerGrid.getPosValue(pos);
+		if (value == -1) {
+			return true;
+		} 
+		else {
+			return false;
 		}
 	}
 	

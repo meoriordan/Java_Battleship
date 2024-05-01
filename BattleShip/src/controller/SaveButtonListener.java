@@ -12,18 +12,19 @@ import shiplayout.SnapGrid;
 
 public class SaveButtonListener implements ActionListener {
 	private SnapGrid sg;
-	private PlayGameClient pgc;
+//	private PlayGameClient pgc;
+	private GameControllerClient gcc;
 	
-	public SaveButtonListener(SnapGrid sg, PlayGameClient pgc) {
+	public SaveButtonListener(SnapGrid sg, GameControllerClient gcc) {
 		this.sg = sg;
-		this.pgc = pgc;
+		this.gcc = gcc;
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		HashMap<String,ArrayList<Integer>> finalShipLocations = sg.getFinalShipLocations();
-		pgc.setFinalShipLocations(finalShipLocations);			
-		JButton jb = (JButton)e.getSource();	
+		JButton jb = (JButton)e.getSource();
 		sg.remove(jb);
+		gcc.setFinalShipLocations(finalShipLocations);		
 	}
 }

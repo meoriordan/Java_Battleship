@@ -1,4 +1,4 @@
-package shiplayout;
+package views;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -148,8 +148,8 @@ public class ButtonGrid extends JPanel{
 	public static void main(String args[]) {
 		JFrame frame = new JFrame("SNAP GRID TEST");
 		SnapGrid sg = new SnapGrid();
-//		Grid cg = new Grid(1);///boardID
-		ButtonGrid bg = new ButtonGrid(sg);
+		//Grid cg = new Grid(1);///boardID
+	//	ButtonGrid bg = new ButtonGrid(sg,cg);
 		frame.setLayout(new BorderLayout());
 		frame.add(sg,BorderLayout.EAST);
 	//	frame.add(bg,BorderLayout.CENTER);

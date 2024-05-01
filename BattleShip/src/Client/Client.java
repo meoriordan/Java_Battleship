@@ -20,8 +20,9 @@ import java.util.HashMap;
 
 import javax.swing.*;
 
-import controller.ConnectUsers;
-import controller.LoginController;
+import Server.Server;
+import controller.GameControllerClient;
+//import controller.PlayGameClient.setGridHandler;
 import models.User;
 import views.HomepageView;
 import views.LoginView;
@@ -56,11 +57,18 @@ public class Client  {
 	RegisterView rv;
 	ShipView sv;
 	
+	int[] positions;
+	int currentShot = -1;
+	
+	GameControllerClient gcc;
+	
 	String username;
 	String password;
 	
 	Boolean matched = false;
 	Thread userListHandle;
+	
+	String opponent = null;
 
 	public Client() {
 		
@@ -149,21 +157,53 @@ public class Client  {
 	
 	class UpdatesFromServer implements Runnable {
 		
+		boolean gettingUpdates = true;
+		
 		public void run() {
 			try {
 				while(true) {
+					if (!gettingUpdates) {
+						break;
+					}
+					
+					if (user != null) {
+						System.out.println(user.getUsername() + "awaiting message: ");
+					}
+					
 					String message = fromServer.readUTF(); //client function message
-					System.out.println(message + "message in the main loop :(");
+					
+					System.out.println(message + " ::: message" + user.getUsername());
+					
 					if (message.equals("UPDATE USERS")) { //client function message
-						updateUsers();					
-					} else if (message.equals("ATTEMPTING CONNECTION")) { //client function message
+						updateUsers();		
+						
+					} else if (message.equals("CONNECTION ACK")) {
+						System.out.println("i can proceed with my connection");
+						toServerObj.writeObject(user);
+						toServer.writeUTF(opponent);
+					}
+					
+					else if (message.equals("ATTEMPTING CONNECTION")) { //client function message
 						toServer.writeUTF("considering request");
 						String opponent = fromServer.readUTF();
 						String response = hv.receivedConnectionRequest(opponent);
+						System.out.println("my response is + " + response);
 						toServer.writeUTF(response);
 						toServer.flush();
+						gettingUpdates = false;
+						toServer.writeUTF("STARTING GAME NOW");
 						startGame(opponent);
-					} 
+						
+					} else if (message.equals("accept")) {
+						System.out.println("GAME ACCEPTED!");
+						gettingUpdates = false;
+						startGame(opponent);
+						
+					}
+					else if (message.equals("GOT CONNECTION REQUEST")) {
+
+						continue;
+					}
 				}
 			}
 			catch (IOException e) {
@@ -176,21 +216,18 @@ public class Client  {
 	public void attemptConnection(String opponent) {
 		try {
 			toServer.writeUTF("CONNECT");
-			toServerObj.writeObject(user);
-				try {
-					toServer.writeUTF(opponent);
-					System.out.println("RIGHT HERE" + user.getUsername());
-					toServer.writeUTF("ha ha ha ");
-					
-					String response = fromServer.readUTF();
-					if (response.equals("accept")) {
-						System.out.println("GAME ACCEPTED!");
-						startGame(opponent);
-					}
-				} 
-				catch (IOException e) {
-					e.printStackTrace();
-				}
+			this.opponent = opponent;
+//			toServerObj.writeObject(user);
+//			toServer.writeUTF(opponent);
+
+//				try {
+//					toServer.writeUTF(opponent);
+//					System.out.println("RIGHT HERE" + user.getUsername());
+//					this.opponent = opponent;
+//				} 
+//				catch (IOException e) {
+//					e.printStackTrace();
+//				}
 
 		}
 		catch (IOException e) {
@@ -220,10 +257,94 @@ public class Client  {
 	
 	public void startGame(String opponent) {
 		hv.setVisible(false);
-		sv = new ShipView();
+		sv = new ShipView(user, opponent, this);
 		sv.setVisible(true);
 	}
 	
+	public void getFinalShipLocations(int[] positions) {
+		this.positions = positions; 
+		try {
+			toServerObj.writeObject(positions);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		Thread t = new Thread(new PlayGame(sv.getGCC()));
+		t.start();
+		
+	}
+	
+	public void setCurrentShot(int cs) {
+		this.currentShot = cs;
+		System.out.println("cs is now " + cs);
+	}
+	
+	class PlayGame implements Runnable {
+		
+		GameControllerClient gcc;
+//		int currentShot;
+		
+
+		
+		public PlayGame(GameControllerClient gcc) {
+			this.gcc = gcc;
+//			currentShot = -1;
+		}
+		
+			String message = null;
+			
+			public void run() {
+				while(true) {
+					try {
+						message = fromServer.readUTF();
+						System.out.println("first message of the game: " + message);
+					}
+					catch (IOException e) {
+						e.printStackTrace();
+					}
+					
+					if (message.equals("YOUR TURN")) {
+						gcc.takeTurn();
+						while(currentShot == -1) {
+							currentShot = gcc.checkCurrentShot();
+							try {
+							Thread.sleep(1000);
+							}
+							catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						} 
+						try {
+							System.out.println("sending shot" );
+							toServer.writeInt(currentShot);
+							System.out.println("watiting here" );
+							Boolean result = fromServer.readBoolean();
+							System.out.println("the result of this shot is: " + result);
+							gcc.updateButton(result);
+							currentShot = -1;
+							message = null;
+						}
+						catch (IOException e) {
+							e.printStackTrace();
+						}
+					} else if (message.equals("HIT MADE")) {
+						try {
+							int hitMade = fromServer.readInt();
+							System.out.println("i was hit :( at pos " + hitMade);
+							message = null;
+							currentShot = -1;
+						}
+						catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+	}
+					
+
+
 	public static void main(String[] args) {
 		Client client = new Client();
 	}

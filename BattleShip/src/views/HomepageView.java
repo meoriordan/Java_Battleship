@@ -73,18 +73,13 @@ public class HomepageView extends JFrame {
 		
 	}
 	
-//	public void updateUsers(ArrayList<User> ou) {
-//		System.out.println("here in update users");
-//		this.onlineUsers = ou;
-//		this.repaint();
-//	}
 	
 	
 	class ConnectListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String opponent = ((JButton) e.getSource()).getText();
-	        System.out.println(((JButton) e.getSource()).getText());
+//	        System.out.println(((JButton) e.getSource()).getText());
 	        myClient.attemptConnection(opponent);
 		}	  
 	  }

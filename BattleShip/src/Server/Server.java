@@ -1,8 +1,10 @@
+package Server;
 
 import controller.LoginController;
 import controller.RegisterController;
 import controller.GameController;
 import models.User;
+import models.Game;
 
 import java.awt.BorderLayout;
 
@@ -148,7 +150,7 @@ public class Server extends JFrame implements Runnable {
 		        	outputToClient.writeBoolean(verify);
 		        	
 		        	if (verify == true) {   
-		        		user = lc.retrieveUser();
+		        		this.user = lc.retrieveUser();
 		        		toClientObj.writeObject(user);
 			        	Server.ch.add(this);
 			        	updateActiveUsers();	
@@ -157,178 +159,139 @@ public class Server extends JFrame implements Runnable {
 		    	catch (IOException e) {
 		    		e.printStackTrace();
 		    	}
-
-	        	
-
-		    	
 		    }
 		    
-//		    public void attemptConnection() {
-//		    	try {
-//		    		Object o1 = fromClientObj.readObject();
-//		    		Object o2 = fromClientObj.readObject();
-//		    		User u1 = (User) o1;
-//		    		User u2 = (User) o2;
-//		    		
-//		    		String response;
-//		    		HandleAClient opponent = null;
-//		    		for (HandleAClient h: Server.ch) {
-//		    			if (h.user.getUsername().equals(u2.getUsername())) {
-//		    				opponent = h;
-//		    			}
-//		    		}
-//		    		
-//    				ta.append("ATTEMPTING connection with" + u2.getUsername());
-//    				opponent.outputToClient.writeUTF("ATTEMPTING CONNECTION");
-//    				opponent.outputToClient.writeUTF(u1.getUsername());
-//    				ta.append("\nresponse is coming from " + opponent.user.getUsername());
-////    				ta.append("waiting for response1");
-////    				ta.append("waiting for response2");
-////    				ta.append("waiting for response3");
-//    				ta.append("waiting waiting  response");
-//    				opponent.outputToClient.writeUTF("OK TESTING 1234");
-//    				ta.append(opponent.inputFromClient.readUTF());
-////    				response = opponent.inputFromClient.readUTF();
-//    				
-//    				ta.append("got response");
-//    				
-////		    		ta.append("THE RESPONSE IS:  "+ response);
-//		    		
-//		    	} 
-//		    	catch (IOException e) {
-//		    		e.printStackTrace();	
-//		    	}
-//		    	catch (ClassNotFoundException e) {
-//		    		e.printStackTrace();
-//		    	}
-//		    }
+		    
+		    public void takeAPause() {
+		    	try {
+			    	Thread.sleep(30000);
+		    	}
+		    	catch (InterruptedException e){
+		    		e.printStackTrace();
+		    	}
+		    }
+		    
 		    
 		    
 		    public void run() {
+				Boolean endThisThread = false;
 		    	try {
 		    		while (true) {
+		    			if (endThisThread) {
+		    				break;
+		    			}
+		    			if (user != null) {
+			    			ta.append("waiting for an action: " + user.getUsername() + "\n");
+		    			}
 		    			
 		    			String action = inputFromClient.readUTF();
 		    			ta.append("heres my action: " + action);
+		    			
 		    			if (action.equals("REGISTER")) {
 		    				attemptRegistration();
 		    			}
 		    			else if (action.equals("LOGIN")) {
 		    				attemptLogin();
 		    			} 
+		    			else if (action.equals("STARTING GAME NOW")) {
+		    				endThisThread = true;
+		    			}
 		    			else if (action.equals("CONNECT")) { 
+		    				
+		    				Object o1;
+		    				String opponent;
+		    				String response;
 		    				try {
-			    				ta.append("\nCONNECTING");
-					    		Object o1 = fromClientObj.readObject();
-					    		String opponent = inputFromClient.readUTF();
+//			    				ta.append("\nCONNECTING");
+			    				outputToClient.writeUTF("CONNECTION ACK");
+					    		o1 = fromClientObj.readObject();
 					    		User u1 = (User) o1;
-//					    		User u2 = (User) o2; 
-//					    		
-					    		String response;
+					    		opponent = inputFromClient.readUTF();
+//					    		ta.append("GOT THE OPPONENT INFO\n");
+					    		
+	
+					    		
 					    		Socket opponentSocket = null;
 					    		DataOutputStream opponentOutput = null;
 					    		DataInputStream opponentInput = null;
+					    		ObjectOutputStream opponentObjOutput = null;
+					    		ObjectInputStream opponentObjInput = null;
+					    		User opponentUser = null;
+					    		
 					    		for (HandleAClient h: Server.ch) {
 					    			if (h.user.getUsername().equals(opponent)) {
-							    		ta.append("GOT THE OPPONENT \n");
+//							    		ta.append("GOT THE OPPONENT \n");
 					    				opponentSocket = h.socket;
 					    				opponentOutput = h.outputToClient;
-					    				opponentInput  = h.inputFromClient;		
+					    				opponentInput  = h.inputFromClient;	
+					    				opponentObjOutput = h.toClientObj;
+					    				opponentObjInput = h.fromClientObj;
+					    				opponentUser = h.user;
+//					    				h.takeAPause();
 					    			}
 					    		}
-					    		
 			    				opponentOutput.writeUTF("ATTEMPTING CONNECTION");
 			    				opponentOutput.writeUTF(u1.getUsername());
-			    				response = opponentInput.readUTF();
-			    				ta.append("RESPONSE: " + response);
-			    				
-			    				if (response.equals("accept")) {
-//			    					PlayAGame play = new PlayAGame(this.socket, this.user, opponent.socket, opponent.user);
-//			    					Thread t2 = new Thread(play);
-//			    					t2.start();
-
-//				    				try {
-//					    				Thread.sleep(10000);
-//				    				}
-//				    				catch (InterruptedException e) {
-//				    					e.printStackTrace();
-//				    				}
-//			    					for 
-				    				ta.append(inputFromClient.readUTF());
-				    				
-			    					for (int i = 0; i < 100; i++) {
-				    					outputToClient.writeUTF(response);
-				    					outputToClient.flush();
-			    					}
-//			    					ta.append("sent");
-			    				}
-		    				} 
+			    				outputToClient.writeUTF("accept");
+		    					PlayAGame play = new PlayAGame(this.socket, this.user, opponentSocket, opponentUser, this.inputFromClient,this.outputToClient, opponentInput, opponentOutput,this.fromClientObj, this.toClientObj, opponentObjInput, opponentObjOutput);
+		    					Thread t2 = new Thread(play);
+		    					t2.start();
+		    					endThisThread = true;
+//			    				response = opponentInput.readUTF();
+//			    				System.out.println(response);
+//			    				ta.append("RESPONSE: " + response);
+					    							    		
+		    				}
 		    				catch (IOException e) {
 		    					e.printStackTrace();
 		    				}
 		    				catch (ClassNotFoundException e) {
 		    					e.printStackTrace();
 		    				}
-
-		    			} else if (action.equals("considering request")) {
-		    				try {
-			    				Thread.sleep(30000);
-		    				}
-		    				catch (InterruptedException e) {
-		    					e.printStackTrace();
-		    				}
 		    			}
-		    			
 		    		}
-		    	}
-		    	catch (IOException e) {
-		    		e.printStackTrace();
-		    	}
-		    }
+		    	} catch (IOException e) {
+			    		e.printStackTrace();
+			    	}
+			    	System.out.println("bye bye thread");
+//			    				outputToClient.writeUTF("GOT CONNECTON REQUEST");
 
-		    
-//		    public void run() {
-//		      try {  
-//		        while (true) {
-//		        	String username = inputFromClient.readUTF();
-//		        	String password = inputFromClient.readUTF();
-//		        	LoginController lc = new LoginController(username, password);
-//		        	boolean verify = lc.verifyInfo();
-//		        	outputToClient.writeBoolean(verify);
-//		        	
-//		        	if (verify == true) {   
-//		        		user = lc.retrieveUser();
-//		        		toClientObj.writeObject(user);
-//			        	Server.ch.add(this);
-//			        	updateActiveUsers();
-//			        	ta.append(user.getUsername());
-//			        	break;
-//		        	}
-//		        }
-//		        	
-//	        	while (true) {
-//	        		try {
-//		        		Object o = fromClientObj.readObject();
-//		        		User u = (User) o;
-//		        		ta.append("THIS IS THE OPPONENT" + u.getUsername());
-//		        		attemptConnection(this.user, u);
-//	        		} 
-//	        		catch (ClassNotFoundException e) {
-//	        			e.printStackTrace();
-//	        		}
-//	        	}       
-//		      }
-//		      catch(IOException ex) {
-//		    	  for (User u: activeUsers) {
-//		    		  if (u.equals(user)) {
-//		    			  activeUsers.remove(u);
-//		    		  }
-//		    	  }  
-//		        ex.printStackTrace();
-//		        ta.append("Connection lost with client " + this.clientNum + '\n');
-//		      }
-//		    }
-		  }
+//					    		
+
+//					    		
+//			    				opponentOutput.writeUTF("ATTEMPTING CONNECTION");
+//			    				opponentOutput.writeUTF(u1.getUsername());
+//			    				response = opponentInput.readUTF();
+//			    				ta.append("RESPONSE: " + response);
+//			    				
+//			    				for (int i = 0; i < 100; i++) {
+//			    					outputToClient.writeUTF(response);
+//			    					outputToClient.flush();	
+//			    				}
+//
+//			    				
+//			    				if (response.equals("accept")) {
+//
+//			    					ta.append("\nplaying!");
+
+//			    				}
+//		    				} 
+
+
+//		    			} else if (action.equals("considering request")) {
+//		    				try {
+//			    				Thread.sleep(30000);
+//			    				endThisThread = true;
+//		    				}
+//		    				catch (InterruptedException e) {
+//		    					e.printStackTrace();
+//		    				}
+//		    			}	
+//		    		}
+//		    	}
+
+
+		    }
 	  
 	  class PlayAGame implements Runnable {
 		  
@@ -337,6 +300,12 @@ public class Server extends JFrame implements Runnable {
 		  private DataInputStream inputFromClient2;
 		  private DataOutputStream outputToClient2;
 		  
+		  private ObjectInputStream inputObjFromClient1;
+		  private ObjectOutputStream outputObjToClient1;
+		  
+		  private ObjectInputStream inputObjFromClient2;
+		  private ObjectOutputStream outputObjToClient2;
+		  
 		  private Socket socket1;
 		  private Socket socket2;
 		  
@@ -344,41 +313,116 @@ public class Server extends JFrame implements Runnable {
 		  private User user2;
 		  
 		  private GameController gc;
+		  private Game g;
 		  
-		  public PlayAGame(Socket s1, User u1, Socket s2, User u2) {
-			  try {
-		    	  this.inputFromClient1 = new DataInputStream(s1.getInputStream());
-		    	  this.outputToClient1 = new DataOutputStream(s1.getOutputStream());  
-		    	  this.inputFromClient1 = new DataInputStream(s2.getInputStream());
-		    	  this.outputToClient1 = new DataOutputStream(s2.getOutputStream());	  
-			  } 
-			  catch (IOException e) {
-				  e.printStackTrace();
-			  }
+		  int[] positions1;
+		  int[] positions2;
+		  
+		  public PlayAGame(Socket s1, User u1, Socket s2, User u2, DataInputStream id1, DataOutputStream od1, DataInputStream id2, DataOutputStream od2, ObjectInputStream oi1, ObjectOutputStream oo1, ObjectInputStream oi2, ObjectOutputStream oo2) {
 			  
+			  System.out.println("RUNNING GAME"); 
+
 			  this.socket1 = s1;
 			  this.socket2 = s2;
 			  
 			  this.user1 = u1;
 			  this.user2 = u2;
 			  
+			  inputFromClient1 = id1;
+			  outputToClient1 = od1;
+			  inputFromClient2 = id2;
+			  outputToClient2 = od2;
+			  
+			  inputObjFromClient1 = oi1;
+			  outputObjToClient1 = oo1;
+			  inputObjFromClient2 = oi2;
+			  outputObjToClient2 = oo2;
+			  
 			  gc = new GameController(user1, user2);
-
+			  
 		  }
 		  
 		  public void run() {
-			  //initialize boards 
 			  
-			  //play game 
+			  try {
+				  Object op1 = inputObjFromClient1.readObject();
+				  Object op2 = inputObjFromClient2.readObject();
+
+				  positions1 = (int[]) op1;
+				  positions2 = (int[]) op2;
+				  
+				  ta.append("GOT MY BOARDS");
+				  
+			  }
+			  catch (IOException e) {
+				  e.printStackTrace();
+			  } 
+			  catch (ClassNotFoundException e1) {
+				  e1.printStackTrace();
+			  }
 			  
+			  gc.setBoards(positions1, positions2);
 			  
+			  int turn = 0;
 			  
+			  while(true) {
+				  
+				  ta.append("we're off!");
+				  ta.append("current turn: " + turn);
+				  if  (turn % 2 == 0) {
+					  try {
+						  outputToClient2.writeUTF("YOUR TURN");
+						  outputToClient1.writeUTF("wait for now");
+						  int shot = inputFromClient2.readInt();
+						  ta.append(user2.getUsername() + " chose " + shot);
+						  boolean shotMade = gc.takeTurn(user2,shot);
+						  ta.append("writing to client now" );
+						  outputToClient2.writeBoolean(shotMade);
+						  if (shotMade) {
+							  outputToClient1.writeUTF("HIT MADE");
+							  outputToClient1.writeInt(shot);
+						  }
+					  }
+					  catch (IOException e) {
+						  e.printStackTrace();
+					  }
+					 
+//					  turn++;
+					  //send message to client 
+					  //get value from client 2
+					  //pass value to game controller 
+					  //get hit or miss back from controller 
+					  //send hit or miss back to player 
+					  //send message to client 
+				  } 
+				  else {
+					  try {
+						  outputToClient1.writeUTF("YOUR TURN");
+						  outputToClient2.writeUTF("wait for now");
+						  int shot = inputFromClient1.readInt();
+						  ta.append(user1.getUsername() + " chose " + shot);
+						  boolean shotMade = gc.takeTurn(user1,shot);
+						  ta.append("writing to client now" );
+						  outputToClient1.writeBoolean(shotMade);
+					  }
+					  catch (IOException e) {
+						  e.printStackTrace();
+					  }
+					  //send message to client 
+					  //get value from client 2
+					  //pass value to game controller 
+					  //get hit or miss back from controller 
+					  //send hit or miss back to player 
+					  //send message to client 		  
+				  }
+				  turn+=1;
+			  }
 		  }
-		  
-		  
+
+	  }
 	  }
 	  
-	  
+	    
 	  
 
 	public static void main(String[] args) {

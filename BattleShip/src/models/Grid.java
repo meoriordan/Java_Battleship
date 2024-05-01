@@ -17,6 +17,16 @@ public class Grid {
 		}
 	}
 	
+	public int[] getPositions() {
+		return positions;
+	}
+	
+	public void setPositions(int[] pos) {
+		for (int i = 0; i < 101; i++) {
+			positions[i] = pos[i];
+		}
+	}
+	
 	public void setValue(int value, int position) {
 		positions[position] = value;
 	}

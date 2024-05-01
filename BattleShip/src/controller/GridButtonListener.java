@@ -12,22 +12,27 @@ import shiplayout.ButtonGrid;
 public class GridButtonListener implements ActionListener{
 	private HashMap<JButton,Boolean> pushedButtons;
 	private ButtonGrid bg;
-	private PlayGameClient pgc;
+//	private PlayGameClient pgc;
+	private GameControllerClient gcc;
 	
-	public GridButtonListener(ButtonGrid bg, PlayGameClient pgc) {
+	public GridButtonListener(ButtonGrid bg, GameControllerClient gcc) {
 		this.bg = bg;
-		this.pgc = pgc;
+		this.gcc = gcc;
+		pushedButtons = new HashMap<JButton, Boolean>();
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		JButton jb = (JButton) e.getSource();
 		jb.setBackground(Color.GRAY);
-		int pos = Integer.valueOf(jb.getName());		
+//		System.out.println("the button name is: " + jb.getText());
+		int pos = Integer.valueOf(jb.getText());	
+		System.out.println("the position pushed is : " + pos);
 		pushedButtons.put(jb,true);
 		bg.setPushedButtons(pushedButtons);
 		jb.removeActionListener(this);
-		pgc.giveTurn(jb,pos);
+		gcc.getCurrentShot(pos, jb);
+//		pgc.giveTurn(jb,pos);
 		
 	}
 }
