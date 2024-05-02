@@ -2,9 +2,7 @@ package models;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
-//import shiplayout.Ship;
-import shiplayout.Ship2;
+import shiplayout.Ship;
 import shiplayout.SnapGrid;
 
 public class Board {
@@ -17,14 +15,10 @@ public class Board {
 	private String opponentName;
 	private int gameID;
 	private String username;
-	//private boolean savedShipLocation;
 	private HashMap<String,ArrayList<Integer>> finalShipLocations;
-	private ArrayList<Ship> ships;
-	//private SnapGrid sg;
 	
 	HashMap<String, Integer> shipTypes = new HashMap<String, Integer>();
 	
-
 	private void populateShipTypes() {
 		shipTypes.put("Carrier",5);
 		shipTypes.put("Battleship",4);
@@ -38,21 +32,10 @@ public class Board {
 		this.boardID = boardIDs++;
 		this.gameID = gameID;
 		this.username = username;
-		this.opponentName = opponentName;
-		//savedShipLocation = false;
+		this.opponentName = opponentName;;
 		playerGrid = new Grid(this.boardID);
 		opponentGrid = new Grid(this.boardID);
-//		sg = new SnapGrid(); //UI Component 
-//		Thread t = new Thread(new HandleShipPlacement());
-//		t.start();
-		//opponentGrid = new Grid(this.boardID);
-		ships = new ArrayList<Ship>();
-		
 		populateShipTypes();
-		
-		for (String s: shipTypes.keySet()) {
-			ships.add(new Ship(this.boardID,s,shipTypes.get(s)));
-		}
 	}
 	
 	public void initializeOpponentGrid(HashMap<String,ArrayList<Integer>> opponentShipLocations) {
@@ -78,26 +61,20 @@ public class Board {
 	
 	
 	public void initializePlayerGrid() {
-		//something about placing the ships on the board
-		//when a ship is placed on grid, mark those values on the board
 		for(HashMap.Entry<String,ArrayList<Integer>> entry: finalShipLocations.entrySet()) {
 			for(Integer pos: entry.getValue()) {
 				playerGrid.setValue(-1, pos);
 			}
 		}
-		
 	}
 	
 	public int opponentHitOrMiss(int box) {
-		//will return 0 for miss or 1 for hit
 		int value = opponentGrid.getPosValue(box);
 		if(value == -1) {
 			opponentGrid.setValue(1, box);
 			return 1;
 		}
-		
 		return 0;
-		
 	}
 	
 	public int thisHitOrMiss(int box) {
@@ -106,13 +83,15 @@ public class Board {
 			playerGrid.setValue(1, box);
 			return 1;
 		}
-		
 		return 0;
 	}
 	
-	
 	public int checkPlayerGridScore() {
 		return playerGrid.getTotalPoints();
+	}
+	
+	public int checkOpponentGridScore() {
+		return opponentGrid.getTotalPoints();
 	}
 	
 }

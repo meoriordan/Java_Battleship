@@ -1,6 +1,6 @@
 package models;
 
-public class Ship {
+public class ShipModel {
 	
 	private static int shipIDs;
 	
@@ -12,7 +12,7 @@ public class Ship {
 	private int length;
 	private boolean inPlay;
 	
-	public Ship(int boardID, String shipType, int length) {
+	public ShipModel(int boardID, String shipType, int length) {
 		this.boardID = boardID;
 		this.shipType = shipType;
 		this.length = length;

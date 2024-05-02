@@ -86,23 +86,9 @@ public class ShipClient {
 	public void renewHomepage() {
 		hv.setVisible(true);
 		gamePlay = false;
-		try {
-			if(hostSocket == null) {
-				hostSocket = new Socket("localhost",9898);
-			}
-			if(toServer == null) {
-				toServer = new DataOutputStream(hostSocket.getOutputStream());
-			}
-			if(fromServer == null) {
-				fromServer = new DataInputStream(hostSocket.getInputStream());
-			}
-			toServer.writeUTF(ADDME);
-			userListHandle = new Thread(new UserListener());
-			userListHandle.start();
-			turn = false;
-		}catch(IOException ioe) {
-			ioe.printStackTrace();
-		}
+		userListHandle = new Thread(new UserListener());
+		userListHandle.start();
+		turn = false;
 	}
 	
 	public void verifyLogin() {

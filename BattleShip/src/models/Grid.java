@@ -12,7 +12,7 @@ public class Grid {
 		positions = new int[101];
 		
 		//initialize all positions to zero
-		for(int i = 1; i<=100;i++) {
+		for(int i = 0; i<=100;i++) {
 			positions[i] = 0;
 		}
 	}
@@ -27,10 +27,17 @@ public class Grid {
 	
 	public int getTotalPoints() {
 		int totalPoints = 0;
-		for (int i = 0; i < 100; i++) {
-			totalPoints += i;
+		for (int i = 0; i <= 100; i++) {
+			totalPoints += positions[i];
 		}
 		return totalPoints;
 	}	
 	
+	public String toString() {
+		String printVal = "";
+		for(int i:positions) {
+			printVal = printVal + i+ "   ";
+		}
+		return printVal;
+	}
 }

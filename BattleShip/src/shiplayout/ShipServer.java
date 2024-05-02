@@ -32,7 +32,6 @@ public class ShipServer extends JFrame implements Runnable{
 	private JTextArea ta;
 	private int clientNo = 0;
 	private final static String ACCEPT = "Accept";//
-	private final static String ADDME = "ADDME";//
 	private final static String DENY = "Deny";//
 	private final static String FALSE = "FALSE";//
 	private final static String GAMEREQUEST = "GAMEREQUEST";//
@@ -43,7 +42,7 @@ public class ShipServer extends JFrame implements Runnable{
 	private final static String SAVED = "SAVED";//
 	private final static String TRUE = "TRUE";//
 	private ServerSocket serverSocket;
-	private final static ArrayList<String> INVALID_USERNAMES = new ArrayList<String>(Arrays.asList(ACCEPT,ADDME,DENY,LOGIN,REQUESTED,GAMESTART,GAMEREQUEST,REGISTER,SAVED,TRUE,FALSE));
+	private final static ArrayList<String> INVALID_USERNAMES = new ArrayList<String>(Arrays.asList(ACCEPT,DENY,LOGIN,REQUESTED,GAMESTART,GAMEREQUEST,REGISTER,SAVED,TRUE,FALSE));
 	private final static int DELAY = 20;
 	
 	public ShipServer() {
@@ -90,6 +89,7 @@ public class ShipServer extends JFrame implements Runnable{
 		DataInputStream inputFromThisClient;
 		ObjectOutputStream outputToClientObj;
 		ObjectInputStream inputFromClientObj;
+		HandleClientConnect opponentHCC;
 		private User user;
 		private Boolean gamePlay;
 		private int clientNum;
@@ -126,8 +126,14 @@ public class ShipServer extends JFrame implements Runnable{
 		public ObjectInputStream getObjInput() {
 			return inputFromClientObj;
 		}
+		
+		public void setGamePlay(Boolean gamePlay) {
+			this.gamePlay = gamePlay;
+		}
 
 		public void gameStart(HandleClientConnect opponentHCC){
+			this.opponentHCC = opponentHCC;
+			opponentHCC.setGamePlay(true);
 			gamePlay = true;
 			try {
 				PlayGameServer pgs = new PlayGameServer(this,opponentHCC);
@@ -140,6 +146,9 @@ public class ShipServer extends JFrame implements Runnable{
 		
 		public void gameEnd() {
 			gamePlay = false;
+			this.opponentHCC = null;
+			opponentHCC.setGamePlay(false);
+			
 		}
 		
 		public void attemptLogin(String userName) {
@@ -242,11 +251,6 @@ public class ShipServer extends JFrame implements Runnable{
 							}
 							else if(message.equals(GAMEREQUEST)) {
 								attemptGameRequest();
-							}
-							else if(message.equals(ADDME)) {
-								opponents.remove(this);
-								opponents.values().removeIf(value -> value.equals(this));
-								threadMap.put(username, this);
 							}
 							else if(message.equals(GAMESTART)) {
 								gamePlay = true;

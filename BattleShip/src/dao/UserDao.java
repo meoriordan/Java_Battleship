@@ -30,7 +30,7 @@ public class UserDao {
 	
 	public UserDao() {
 		try {
-			url = "jdbc:sqlite:/Users/elizabethoriordan/battleship.db";
+			url = "jdbc:sqlite:C:/sqlite/battleship.db";
 			conn = DriverManager.getConnection(url);
 		}
 		catch (SQLException e ) {
@@ -102,28 +102,14 @@ public class UserDao {
 			pstmt.setString(2, password);
 			
 			ResultSet rset = pstmt.executeQuery();
-			user = new User(rset.getInt(1), username, password, rset.getInt(4));
-			
+			user = new User(rset.getInt(1), username, password, rset.getInt(4));	
 		}
 		catch (SQLException e) {
 			e.printStackTrace();
-//			return false;
 		}
 		return user;
 
 	}
-	
-	
-//	public static void main(String[] args) {
-//		UserDao u = new UserDao();
-//		User user = new User(5,"elizabeth","pasword",0);
-//		boolean x = u.insertUser(user);
-//		System.out.println(x);
-//		
-//	}
-	
-	
-
 }
 	
 	

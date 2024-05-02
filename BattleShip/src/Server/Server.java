@@ -1,3 +1,4 @@
+package Server;
 
 import controller.LoginController;
 import controller.RegisterController;

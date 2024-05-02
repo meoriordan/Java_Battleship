@@ -70,8 +70,8 @@ public class Client  {
 		    toServerObj = new ObjectOutputStream(socket.getOutputStream());
 		    
 			lv = new LoginView(this);
-		    lv.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		    lv.setVisible(true);
+//		    lv.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		    lv.setVisible(true);
 		}
 		catch (IOException e1) {
 			e1.printStackTrace();
