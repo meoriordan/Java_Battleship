@@ -145,7 +145,8 @@ public class PlayGameClient {
 					}
 				}
 				startGamePlay();
-			} catch (IOException e) {
+			} catch(SocketTimeoutException ste) {}
+			catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();

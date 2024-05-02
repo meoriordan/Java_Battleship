@@ -259,7 +259,8 @@ public class ShipServer extends JFrame implements Runnable{
 						}
 					}
 				}
-			}catch(IOException ioe){
+			}catch(SocketTimeoutException ste) {}
+			catch(IOException ioe){
 				ta.append("IOEXCEPTION FROM THREAD: "+username+"\n");
 				ioe.printStackTrace();
 				removeClient(username);
