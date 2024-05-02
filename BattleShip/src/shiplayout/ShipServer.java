@@ -3,43 +3,52 @@ package shiplayout;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import controller.LoginController;
+import controller.RegisterController;
+import models.User;
+
 public class ShipServer extends JFrame implements Runnable{
-	private static HashMap<String,Socket> users;
-	private static HashMap<Socket,Socket> opponents;
+	private static Map<HandleClientConnect, HandleClientConnect> opponents;
+	private static Map<String,HandleClientConnect> threadMap;
 	private JTextArea ta;
 	private int clientNo = 0;
-	//private ServerSocket serverSocket;
-	private static final ExecutorService executorService = Executors.newFixedThreadPool(10);
-	private final static String GAMEREQUEST = "GAMEREQUEST";
-	private final static String ACCEPT = "Accept";
-	private final static String DENY = "Deny";
-	private final static String REQUESTED = "Requested";
-	private final static String GAMESTART = "GameStart";
-	
-
+	private final static String ACCEPT = "Accept";//
+	private final static String ADDME = "ADDME";//
+	private final static String DENY = "Deny";//
+	private final static String FALSE = "FALSE";//
+	private final static String GAMEREQUEST = "GAMEREQUEST";//
+	private final static String GAMESTART = "GameStart";//
+	private final static String LOGIN = "Login";//
+	private final static String REGISTER = "REGISTER";//
+	private final static String REQUESTED = "Requested";//
+	private final static String SAVED = "SAVED";//
+	private final static String TRUE = "TRUE";//
+	private ServerSocket serverSocket;
+	private final static ArrayList<String> INVALID_USERNAMES = new ArrayList<String>(Arrays.asList(ACCEPT,ADDME,DENY,LOGIN,REQUESTED,GAMESTART,GAMEREQUEST,REGISTER,SAVED,TRUE,FALSE));
+	private final static int DELAY = 20;
 	
 	public ShipServer() {
 		
-		super("Ship Server");
-		
-//		try {
-//			this.serverSocket = new ServerSocket(port);
-//		}catch(IOException e) {
-//			e.printStackTrace();
-//		}
-//		
-		users = new HashMap<String,Socket>(); //username and socket
+		super("Ship Server");//		
 		ta = new JTextArea(10,10);
 		JScrollPane sp = new JScrollPane(ta);
 		this.add(sp);
@@ -47,109 +56,220 @@ public class ShipServer extends JFrame implements Runnable{
 		this.setSize(400,200);
 		Thread t = new Thread(this);
 		t.start();
-		this.opponents = new HashMap<Socket,Socket>();
+		HashMap<HandleClientConnect,HandleClientConnect> opps = new HashMap<HandleClientConnect,HandleClientConnect>();
+		this.opponents = Collections.synchronizedMap(opps);
+		HashMap<String,HandleClientConnect> threads = new HashMap<String,HandleClientConnect>();
+		threadMap = Collections.synchronizedMap(threads);
 	}
 	
 	@Override
 	public void run() {
 		try {
-			ServerSocket serverSocket = new ServerSocket(9898);
+			serverSocket = new ServerSocket(9898);
 			ta.append("MultiThreaded BattleShip Server started at "+ new Date() + "\n");
 			while(true) {
 				Socket clientSocket = serverSocket.accept();
 				clientNo++;
 				ta.append("Starting thread for client " + clientNo+" at " + new Date() + "\n");
-				executorService.submit(()->{
-					try {
-						handleClientConnect(clientSocket);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				});
+				InetAddress inetAddress= clientSocket.getInetAddress();
+				ta.append("Client " + clientNo + "'s host name is " +inetAddress.getHostName()+"\n");
+				ta.append("Client "+ clientNo + "'s IP Address is "+inetAddress.getHostAddress()  + "\n");
+				Thread thread = new Thread(new HandleClientConnect(clientSocket,clientNo));
+				thread.start();
 			}
 		}catch(IOException ioe) {
 				ioe.printStackTrace();
 		}
-		
 	}
 	
-	private void handleClientConnect(Socket clientSocket) throws InterruptedException {
-		String username = null;
-		try {
-			DataInputStream dataIn = new DataInputStream(clientSocket.getInputStream());
-			DataOutputStream dataOut = new DataOutputStream(clientSocket.getOutputStream());
+	class HandleClientConnect implements Runnable {
+		
+		private String username = null;
+		private Socket clientSocket;
+		DataOutputStream outputToThisClient;
+		DataInputStream inputFromThisClient;
+		ObjectOutputStream outputToClientObj;
+		ObjectInputStream inputFromClientObj;
+		private User user;
+		private Boolean gamePlay;
+		private int clientNum;
+		private PlayGameServer pgs = null;
+		
+		public HandleClientConnect(Socket clientSocket, int clientNum) {
+			this.clientSocket = clientSocket;
+			this.clientNum = clientNum;
+			gamePlay = false;
 			
-			username = dataIn.readUTF();
-			users.put(username, clientSocket);
-			postUserList();
+			try {
+				outputToThisClient = new DataOutputStream(clientSocket.getOutputStream());
+				inputFromThisClient = new DataInputStream(clientSocket.getInputStream());
+			}catch(IOException ioe) {
+				ioe.printStackTrace();
+			}
+		}
+		public String getUsername() {
+			return this.username;
+		}
+		
+		public DataOutputStream getDataOutput() {
+			return outputToThisClient;
+		}
+		
+		public DataInputStream getDataInput() {
+			return inputFromThisClient;
+		}
+		
+		public ObjectOutputStream getObjOutput() {
+			return outputToClientObj;
+		}
+		
+		public ObjectInputStream getObjInput() {
+			return inputFromClientObj;
+		}
+
+		public void gameStart(HandleClientConnect opponentHCC){
+			gamePlay = true;
+			try {
+				PlayGameServer pgs = new PlayGameServer(this,opponentHCC);
+				this.pgs = pgs;
+				ta.append("GAME START IN SERVER: "+username+"\n");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public void gameEnd() {
+			gamePlay = false;
+		}
+		
+		public void attemptLogin(String userName) {
+			try {
+	        	String username = userName;
+	        	String password = inputFromThisClient.readUTF();
+
+	        	LoginController lc = new LoginController(username, password);
+	        	boolean verify = lc.verifyInfo();
+	        	String out = (verify ? TRUE : FALSE);
+	        	outputToThisClient.writeUTF(out);
+	        	outputToThisClient.flush();
+	        	
+	        	if (verify == true) {   
+	        		user = lc.retrieveUser();
+	        		outputToClientObj = new ObjectOutputStream(clientSocket.getOutputStream());
+	        		inputFromClientObj = new ObjectInputStream(clientSocket.getInputStream());
+	        		outputToClientObj.writeObject(user);
+	        		outputToThisClient.flush();
+	        		threadMap.put(username, this);
+	        		this.username = username;	
+	        	}
+		        postUserList();
+	    	}
+	    	catch (IOException e) {
+	    		e.printStackTrace();
+	    	} 
+	    }
+		
+		public void attemptRegistration() {
+			try {
+				String username = inputFromThisClient.readUTF();
+				String password = inputFromThisClient.readUTF();
+				RegisterController rv = new RegisterController(username,password);
+				boolean creationSuccessful = rv.createUser();
+				outputToThisClient.writeUTF(creationSuccessful ? TRUE : FALSE);
+				outputToThisClient.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public void attemptGameRequest() {
 			
-			while(true) {
-				String message = dataIn.readUTF();
-//				if(message.equals("getUsers")){//change equals
-//					postUserList(dataOut);
-//				}
-//				else 
-				if(message.equals(REQUESTED)) {
-					wait();
-				}
-				
-				if(message.equals(GAMEREQUEST)) {
-					//startGame and end this thread
-					String opponentName = dataIn.readUTF();
-					if(users.containsKey(opponentName)) {
-						Socket opponentSocket = users.get(opponentName);
-						DataInputStream inOpponent = new DataInputStream(opponentSocket.getInputStream());
-						DataOutputStream outOpponent = new DataOutputStream(opponentSocket.getOutputStream());
-						outOpponent.writeUTF(GAMEREQUEST);
-						outOpponent.flush();
-						ta.append("CHECK POINT 1\n");
-						outOpponent.writeUTF(username);
-						ta.append("CHECK POINT 2\n");
-						removeClient(opponentName);
-						ta.append("CHECK POINT 3\n");
-						removeClient(username);
-						ta.append("CHECK POINT 4\n");
-						while(true) {
-							ta.append("CHECK POINT 5\n");
-							String response = inOpponent.readUTF();
-							ta.append("CHECK POINT 6\n");
-							ta.append("RESPONSE " +response+"\n");
-							if(response.equals(ACCEPT)) {
-								dataOut.writeUTF(response);
-								dataOut.flush();
-								ta.append("Starting game between "+username+" and "+opponentName+"\n");
-								opponents.put(clientSocket, opponentSocket);
-								opponents.put(opponentSocket,clientSocket);
-								notify();
-								break;
-								
-							}else if(response.equals(DENY)) {
-								dataOut.writeUTF(response);
-								dataOut.flush();
-								users.put(opponentName, opponentSocket);
-								users.put(username,clientSocket);
-								notify();
-								break;
-							}
+			String opponentName;
+			try {
+				opponentName = inputFromThisClient.readUTF();
+				ta.append(username + " requested game with " + opponentName+" waiting on response..\n");
+				if(threadMap.containsKey(opponentName)) {
+					HandleClientConnect opponentHCC = threadMap.get(opponentName);
+					DataInputStream fromOpponent = opponentHCC.getDataInput();
+					DataOutputStream toOpponent = opponentHCC.getDataOutput();	
+					toOpponent.writeUTF(GAMEREQUEST);
+					toOpponent.writeUTF(username);
+					removeClient(opponentName);
+					removeClient(username);
+					while(true) {
+						String response = fromOpponent.readUTF();
+						if(response.equals(ACCEPT)) {
+							outputToThisClient.writeUTF(response);
+							outputToThisClient.flush();
+							ta.append("Starting game between "+username+" and "+opponentName+"\n");
+							opponents.put(this, opponentHCC);
+							opponents.put(opponentHCC,this);
+							gamePlay = true;
+							gameStart(opponentHCC);
+							break;									
+						}else if(response.equals(DENY)) {
+							outputToThisClient.writeUTF(response);
+							outputToThisClient.flush();
+							threadMap.put(opponentName, threadMap.get(opponentName));
+							notify();
+							postUserList();
+							break;
 						}
-//						users.put(opponentName, opponentSocket);
-//						users.put(username,clientSocket);
-						postUserList();	
 					}
 				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}	
+		}
+		
+		@Override
+		public void run() {
+			try {
+				clientSocket.setSoTimeout(5000);
+				while(true) {
+					if(!gamePlay) {
+						try {
+							String message = inputFromThisClient.readUTF();
+						    if(!INVALID_USERNAMES.contains(message)&& message != null) {
+								attemptLogin(message);								
+							}
+							else if(message.equals(REGISTER)) {
+								attemptRegistration();
+							}
+							else if(message.equals(REQUESTED)) {
+								ta.append(username + " received game request.. waiting..\n");
+								wait();
+							}
+							else if(message.equals(GAMEREQUEST)) {
+								attemptGameRequest();
+							}
+							else if(message.equals(ADDME)) {
+								opponents.remove(this);
+								opponents.values().removeIf(value -> value.equals(this));
+								threadMap.put(username, this);
+							}
+							else if(message.equals(GAMESTART)) {
+								gamePlay = true;
+							}
+						}catch(SocketTimeoutException ste) {
+						}
+					}
+				}
+			}catch(IOException ioe){
+				ta.append("IOEXCEPTION FROM THREAD: "+username+"\n");
+				ioe.printStackTrace();
+				removeClient(username);
+				
+			}catch(InterruptedException ie) {
+				ta.append(username + " thread interrupted..");
 			}
-		}catch(IOException ioe) {
-			ioe.printStackTrace();
-			removeClient(username);
-			postUserList();
 		}
 	}
 	
 	private void postUserList() {
-		for(HashMap.Entry<String,Socket> entry : users.entrySet()) {
+		for(HashMap.Entry<String,HandleClientConnect> entry : threadMap.entrySet()) {
 			try {
-				DataOutputStream out = new DataOutputStream(entry.getValue().getOutputStream());
+				DataOutputStream out = entry.getValue().getDataOutput();
 				postUserList(out);
 			}catch(IOException ioe) {
 				removeClient(entry.getKey());
@@ -157,14 +277,14 @@ public class ShipServer extends JFrame implements Runnable{
 		}
 	}
 	
-	private void removeClient(String user) {
-		users.remove(user);
+	private void removeClient(String username) {
+		threadMap.remove(username);
 		postUserList();
 	}
 	
 	private void postUserList(DataOutputStream out )throws IOException {
 		String userList = new String("");
-		for(String username : users.keySet()) {
+		for(String username : threadMap.keySet()) {
 			userList += username + ",";
 		}
 		if(userList.length()>0 && userList.charAt(userList.length()-1) == ','){

@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 import javax.swing.JButton;
 
-import shiplayout.Ship2;
+import shiplayout.Ship;
 import shiplayout.SnapGrid;
 
 public class SaveButtonListener implements ActionListener {

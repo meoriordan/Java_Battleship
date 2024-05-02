@@ -17,14 +17,17 @@ public class GridButtonListener implements ActionListener{
 	public GridButtonListener(ButtonGrid bg, PlayGameClient pgc) {
 		this.bg = bg;
 		this.pgc = pgc;
+		this.pushedButtons = bg.getPushedButtons();
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		this.pushedButtons = bg.getPushedButtons();
 		JButton jb = (JButton) e.getSource();
 		jb.setBackground(Color.GRAY);
-		int pos = Integer.valueOf(jb.getName());		
+		int pos = Integer.valueOf(jb.getName());
 		pushedButtons.put(jb,true);
+		bg.setPushedButtons(pushedButtons);
 		bg.setPushedButtons(pushedButtons);
 		jb.removeActionListener(this);
 		pgc.giveTurn(jb,pos);

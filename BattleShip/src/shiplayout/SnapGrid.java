@@ -1,5 +1,6 @@
 package shiplayout;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.util.HashMap;
 import java.awt.Color;
@@ -30,8 +31,8 @@ public class SnapGrid extends JPanel{
 	private static final ArrayList<String> LETTERS = new ArrayList<String>(Arrays.asList("A","B","C","D","E","F","G","H","I","J"));
 	private static final ArrayList<String> NUMBERS = new ArrayList<String>(Arrays.asList("1","2","3","4","5","6","7","8","9","10"));
 	private int squareSize;
-	private ArrayList<Ship2> ships;
-	private Ship2 selected;
+	private ArrayList<Ship> ships;
+	private Ship selected;
 	private Color shipColor;
 	private int xstart;
 	private int ystart;
@@ -46,30 +47,28 @@ public class SnapGrid extends JPanel{
 	private Boolean saved;
 	private HashMap<Integer,Boolean> hitMap;
 	
-	
 	public SnapGrid() {
 		this.setVisible(true);
-		ships = new ArrayList<Ship2>();
+		ships = new ArrayList<Ship>();
 
 		gridOccupy = new HashMap<Point,Boolean>();
 		gridPoints = new HashMap<Integer,Point>();
 		shipGlue = new HashMap<Integer,Integer>();
 		squareSize = Math.min(getWidth(), getHeight())/11;
-		//System.out.println("1SQUARE SIZE: " +getHeight());
 		shipColor = Color.GRAY;
-		Ship2 carrier = new Ship2("Carrier",squareSize,squareSize);
+		Ship carrier = new Ship("Carrier",squareSize,squareSize);
 		ships.add(carrier);
 		shipGlue.put(0, 15);
-		Ship2 battleship = new Ship2("Battleship",squareSize,squareSize);
+		Ship battleship = new Ship("Battleship",squareSize,squareSize);
 		ships.add(battleship);
 		shipGlue.put(1, 17);
-		Ship2 cruiser = new Ship2("Cruiser",100,squareSize);
+		Ship cruiser = new Ship("Cruiser",100,squareSize);
 		ships.add(cruiser);
 		shipGlue.put(2, 18);
-		Ship2 submarine = new Ship2("Submarine",squareSize,squareSize);
+		Ship submarine = new Ship("Submarine",squareSize,squareSize);
 		ships.add(submarine);
 		shipGlue.put(3, 19);
-		Ship2 destroyer = new Ship2("Destroyer",squareSize,squareSize);
+		Ship destroyer = new Ship("Destroyer",squareSize,squareSize);
 		ships.add(destroyer);
 		shipGlue.put(4, 20);
 		saved = false;
@@ -80,16 +79,15 @@ public class SnapGrid extends JPanel{
 			hitMap.put(1, false);
 		}
 		
-		
 		ma = new MouseAdapter(){
-			private Ship2 currShip;
+			private Ship currShip;
 			private Point change;
 			
 			@Override
 			public void mousePressed(MouseEvent e) {
 				currShip = selected;
 				if(selected == null || !selected.contains(e.getPoint())) {
-					for(Ship2 ship: ships) {
+					for(Ship ship: ships) {
 						if(ship.contains(e.getPoint())) {
 							selected = ship;
 							change = new Point(e.getX()-selected.x,e.getY()-selected.y);
@@ -153,7 +151,6 @@ public class SnapGrid extends JPanel{
 		addMouseListener(ma);
 		addMouseMotionListener(ma);
 		this.setLayout(new FlowLayout());
-		
 	}
 	
 	public void addSaveButtonListener(SaveButtonListener sbl) {
@@ -172,11 +169,15 @@ public class SnapGrid extends JPanel{
 		validate();
 	}
 	
-
-	
 	private void shipsPaint(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g.create();
-		for (Ship2 ship: ships) {
+		float strokeWidth = 3.0f;
+		g2d.setStroke(new BasicStroke(strokeWidth));
+		
+		if(saved) {
+			selected = null;
+		}
+		for (Ship ship: ships) {
 			for(HashMap.Entry<Point,Boolean> entry:gridOccupy.entrySet()) {
 				if(ship.contains(entry.getKey())) {
 					gridOccupy.put(entry.getKey(),true);
@@ -188,6 +189,8 @@ public class SnapGrid extends JPanel{
 				g2d.setColor(shipColor);
 				g2d.fill(ship);
 				g2d.draw(ship);
+				g2d.setColor(Color.BLACK);
+				g2d.drawRect((int)ship.getX(),(int)ship.getY(),(int)ship.getWidth(),(int)ship.getHeight());
 			}
 		}
 		if(selected != null) {
@@ -208,7 +211,6 @@ public class SnapGrid extends JPanel{
 					Point hitPoint = gridPoints.get(box);
 					g.fillRect(hitPoint.x, hitPoint.y, squareSize, squareSize);
 				}
-				
 			}
 		}
 	}
@@ -217,7 +219,7 @@ public class SnapGrid extends JPanel{
 		squareSize = Math.min(getWidth(), getHeight())/11;
 		int letCount = 0;
 		int numCount = 0;
-		int fontSize = squareSize/2;
+		int fontSize = 16;//squareSize/2;
 		int y = (getHeight() - (squareSize * 11))/2;
 		ystart = y;
 		int x = (getWidth() - (squareSize*11))/2;
@@ -226,6 +228,7 @@ public class SnapGrid extends JPanel{
 		gridPoints.clear();
 		int boxCount = 1;
 		for(int horiz = 0; horiz<11; horiz++) {
+			g.setFont(new Font("Arial",Font.BOLD,fontSize));
 			x = (getWidth() - (squareSize*11))/2;
 			
 			for(int vert = 0; vert<11; vert++) {
@@ -236,7 +239,6 @@ public class SnapGrid extends JPanel{
 					numCount++;
 				}
 				if(horiz == 0 && vert >0) {
-					g.setFont(new Font("Serif",Font.BOLD,fontSize));
 					g.drawString(LETTERS.get(letCount), x+(squareSize/2)-fontSize/4, y+(squareSize/2)+fontSize/4);
 					letCount++;
 				}
@@ -244,7 +246,6 @@ public class SnapGrid extends JPanel{
 					Point p = new Point(x+squareSize/2,y+squareSize/2);
 					gridOccupy.put(p,false);
 					gridPoints.put(boxCount,new Point(x,y));
-					g.drawString(String.valueOf(boxCount), x+(squareSize/2)-fontSize/4, y+(squareSize/2)+fontSize/4);
 					boxCount +=1;
 				}
 				x += squareSize;
@@ -254,7 +255,6 @@ public class SnapGrid extends JPanel{
 		}
 		xend = x;
 		yend = y;
-		
 	}
 	
 	@Override
@@ -264,9 +264,9 @@ public class SnapGrid extends JPanel{
 		if (c!=null) {
 			d = c.getSize();
 		}
-		int w = (int) (2*d.getWidth()/3);
+		int w = (int) (d.getWidth());
 		int h = (int) (d.getHeight());
-		int s = (w<h ? w:h)-60;
+		int s = (w<h ? w:h);
 		Dimension nd = new Dimension(s,s);
 		return nd;
 		
@@ -279,8 +279,7 @@ public class SnapGrid extends JPanel{
 	public Boolean isSaved() {
 		return this.saved;
 	}
-	
-	
+
 	public int getSquareSize() {
 		return squareSize;
 	}
@@ -297,7 +296,7 @@ public class SnapGrid extends JPanel{
 	public HashMap<String,ArrayList<Integer>> getFinalShipLocations(){
 		
 		finalShipLocations = new HashMap<String,ArrayList<Integer>>();
-		for(Ship2 ship: ships) {
+		for(Ship ship: ships) {
 			ArrayList<Integer> listOfBoxes = new ArrayList<Integer>();
 			for(HashMap.Entry<Integer,Point> entry: gridPoints.entrySet()) {
 				Point p = entry.getValue();
@@ -306,13 +305,9 @@ public class SnapGrid extends JPanel{
 				}
 			}
 			finalShipLocations.put(ship.getShipType(), listOfBoxes);
-		}
-		//selected = null;
-		//System.out.println("FINAL: "  +finalShipLocations);			
+		}		
 		SnapGrid sg = getSG();
-		//JButton jb = (JButton)e.getSource();
 		saved = true;
-		
 		
 		sg.removeMouseListener(ma);
 		sg.removeMouseMotionListener(ma);
@@ -321,21 +316,7 @@ public class SnapGrid extends JPanel{
 	}
 	
 	public void addHit(int box) {
-		System.out.println("HIT ADDED : " + box);
 		hitMap.put(box, true);
 		repaint();
-	}
-
-//	public static void main(String args[]) {
-//		JFrame frame = new JFrame("SNAP GRID TEST");
-//		SnapGrid sg = new SnapGrid();
-//		frame.setLayout(new BorderLayout());
-//		frame.add(sg,BorderLayout.EAST);
-//		frame.setSize(new Dimension(1000,1000));
-//		frame.setVisible(true);
-//		frame.setLocationRelativeTo(null);
-//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//	}
-
-	
+	}	
 }

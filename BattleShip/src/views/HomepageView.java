@@ -2,6 +2,7 @@ package views;
 
 import controller.LoginController;
 import models.User;
+import shiplayout.ShipClient;
 import controller.ConnectUsers;
 
 import java.awt.*;
@@ -25,39 +26,44 @@ public class HomepageView extends JFrame {
 	private JTextField passwordField;
 	private ConnectUsers cu;
 	private User user;
-	private ArrayList<User> onlineUsers;
-	private Client myClient;
+	private String onlineUsers;
+	private ShipClient myClient;
+	private JPanel panel;
 	
-	public HomepageView(User user, ArrayList<User> onlineUsers, Client myClient) {
+	public HomepageView(User user, ShipClient myClient) {
 
-			JPanel panel = new JPanel();
+			panel = new JPanel();
 			
 			this.user = user;
-			this.onlineUsers = onlineUsers;
 			this.myClient = myClient;
-			
-			for (User u: onlineUsers) {
-				JButton x = new JButton(u.getUsername());
-				panel.add(x);
-				x.addActionListener(new ConnectListener());
-			}
 			add(panel);
 			setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+			setVisible(true);
+			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
-//	public void updateUsers(ArrayList<User> ou) {
-//		System.out.println("here in update users");
-//		this.onlineUsers = ou;
-//		this.repaint();
-//	}
+	public void updateUserList(String onlineUsers) {
+		this.onlineUsers = onlineUsers;
+		panel.removeAll();
+		for(String user: this.onlineUsers.split(",")){
+			if(!user.equals(this.user.getUsername())){
+				JButton userButton = new JButton(user);
+				userButton.setName(user);
+				userButton.addActionListener(new ConnectListener());
+				panel.add(userButton);
+			}
+		}
+		
+		panel.revalidate();
+		panel.repaint();
+	}
 	
 	
 	class ConnectListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String opponent = ((JButton) e.getSource()).getText();
-	        System.out.println(((JButton) e.getSource()).getText());
-	        myClient.attemptConnection(opponent);
+	        myClient.chooseOpponent(opponent);
 		}	  
 	  }
 	

@@ -1,7 +1,7 @@
 package views;
 
 import controller.LoginController;
-
+import shiplayout.ShipClient;
 import Client.Client;
 
 import java.awt.*;
@@ -23,9 +23,9 @@ public class RegisterView extends JFrame {
 	private JTextField passwordField;
 	String username;
 	String password;
-	private Client myClient;
+	private ShipClient myClient;
 	
-	public RegisterView(Client c) {
+	public RegisterView(ShipClient c) {
 		
 			userNameField = new JTextField("",10);
 			passwordField = new JPasswordField("", 10);
@@ -43,6 +43,8 @@ public class RegisterView extends JFrame {
 
 			add(panel);
 			setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+			setVisible(true);
+			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
 	

@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 import javax.swing.JComponent;
 
-public class Ship2 extends Rectangle{
+public class Ship extends Rectangle{
 	private static ArrayList<String> SHIPS = new ArrayList<String>(Arrays.asList("Carrier","Battleship","Cruiser","Submarine","Destroyer"));
 	private static ArrayList<Integer> LENGTHS = new ArrayList<Integer>(Arrays.asList(5,4,3,3,2));
 	private String shipType;
@@ -22,7 +22,7 @@ public class Ship2 extends Rectangle{
 	private int height;
 	private Dimension d;
 	
-	public Ship2(String type,int x, int y) {
+	public Ship(String type,int x, int y) {
 		this.shipType = type;
 		if(shipType == "Carrier") {
 			shipLength = 5;
@@ -46,7 +46,6 @@ public class Ship2 extends Rectangle{
 		squareSize = 100;
 		width = squareSize;
 		height  = squareSize*shipLength;
-		//setPreferredSize(new Dimension(width,height));
 		this.gridX = x;
 		this.gridY = y;
 		setLocation(gridX,gridY);
@@ -55,14 +54,11 @@ public class Ship2 extends Rectangle{
 	}
 	
 	public void updateSize(int newSize) {
-		//squareSize = newSize;
 		width = width*newSize/squareSize;
 		height = height*newSize/squareSize;
 		squareSize = newSize;
 		d.setSize(width,height);
 		this.setSize(d);
-		//repaint();
-		
 	}
 	
 	public void rotateShip() {
@@ -89,18 +85,4 @@ public class Ship2 extends Rectangle{
 	public String getShipType() {
 		return shipType;
 	}
-	
-	
-	
-//	@Override
-//	public void paintComponent(Graphics g) {
-//		super.paintComponent(g);
-//		setVisible(true);
-//		setPreferredSize(new Dimension(width,height));
-//		g.fillRect(0,0,getWidth(),getHeight());
-//		g.setColor(shipColor);
-//	}
-
-	
-
 }

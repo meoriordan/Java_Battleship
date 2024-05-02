@@ -8,7 +8,10 @@ import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,110 +25,130 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
-public class ShipClient extends JFrame{
+import models.User;
+import views.HomepageView;
+import views.LoginView;
+import views.RegisterView;
+import controller.PlayGameClient;
+
+public class ShipClient {
 	private DataOutputStream toServer = null;
 	private DataInputStream fromServer = null;
-	private JPanel activeUserPanel;
-	private HashMap<String,JButton> activeUserButtons;
-	private Socket hostSocket;
+	private Socket hostSocket =null;
 	private static int DELAY = 20;
 	private String username;
 	private String opponent;
-	private JButton openButton;
-	private Thread userListHandle;
-	private final static String GAMEREQUEST = "GAMEREQUEST";
+	private String password;
 	private String[] options;
+	private Thread userListHandle;
 	private final static String ACCEPT = "Accept";
+	private final static String ADDME = "ADDME";
 	private final static String DENY = "Deny";
-	private final static String REQUESTED = "Requested";
+	private final static String FALSE = "FALSE";
+	private final static String GAMEREQUEST = "GAMEREQUEST";
 	private final static String GAMESTART = "GameStart";
-	private final static ArrayList<String> INVALID_USERNAMES = new ArrayList<String>(Arrays.asList(ACCEPT,DENY,REQUESTED,GAMESTART,GAMEREQUEST));
-	private JScrollPane scrollPane;
-	//private final Lock inputStreamLock = new ReentrantLock();
-	private boolean buttonPressed;
+	private final static String LOGIN = "Login";
+	private final static String REGISTER = "REGISTER";
+	private final static String REQUESTED = "Requested";
+	private final static String SAVED = "SAVED";
+	private final static String TRUE = "TRUE";
+	private final static ArrayList<String> INVALID_USERNAMES = new ArrayList<String>(Arrays.asList(ACCEPT,ADDME,DENY,FALSE,GAMESTART,LOGIN,REGISTER,REQUESTED,SAVED,TRUE));
 	private String userList;
-	
+	private User user;
+	private LoginView lv;
+	private HomepageView hv;
+	private RegisterView rv;
+	private ObjectInputStream fromServerObj = null;
+	private ObjectOutputStream toServerObj = null;
+	private Boolean turn;
+	private ReentrantLock lock = new ReentrantLock();
+	private Boolean gamePlay;	
 	
 	public ShipClient() {
-		activeUserPanel = new JPanel(new GridLayout(0,1,5,5));
-		activeUserButtons = new HashMap<String,JButton>();
-		buttonPressed = false;
-		
-		
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(300,400);
-		setLocationRelativeTo(null);
-		
-		scrollPane = new JScrollPane(activeUserPanel);
-		add(scrollPane,BorderLayout.CENTER);
-		
-		username = JOptionPane.showInputDialog("Enter username: ");
-		while(true) {
-			if(!INVALID_USERNAMES.contains(username)) {//update to not be any of the hard strings
-				JOptionPane.showMessageDialog(null, "Welcome "+username);
-				break;
-			}else {
-				username = JOptionPane.showInputDialog("Choose a different username: ");
-			}
-		}
-		
-		
-		openButton = new JButton("Log in");
-		openButton.addActionListener(new OpenConnectionListener());
-		openButton.setSize(100,40);
-		add(openButton,BorderLayout.SOUTH);
-		
-		setTitle("Player: "+username);
-		
-		//GAMEREQUEST OPTIONS
+		lv = new LoginView(this);
 		options = new String[] {ACCEPT,DENY};
-		
-		
-		
+		turn = false;
+		gamePlay = false;
 	}
 	
 	public void gameStart() {
-		activeUserPanel.removeAll();
-		activeUserButtons.clear();
-		remove(activeUserPanel);
-		remove(scrollPane);
-		setVisible(false);
-		//PlayGameClient()
-
+		try {
+			toServer.writeUTF(GAMESTART);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		Pair<DataOutputStream,DataInputStream> serverDataStreams = new Pair<DataOutputStream,DataInputStream>(toServer,fromServer);
+		Pair<ObjectOutputStream,ObjectInputStream> serverObjStreams = new Pair<ObjectOutputStream,ObjectInputStream>(toServerObj,fromServerObj);
+		PlayGameClient pgc = new PlayGameClient(user,opponent,0,turn, serverDataStreams,serverObjStreams,this);
+		hv.setVisible(false);
 	}
 	
-	
-	
-	class OpenConnectionListener implements ActionListener{
-		
-//		public void refreshList() {
-//			activeUsers.clear();
-//		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			try {
+	public void renewHomepage() {
+		hv.setVisible(true);
+		gamePlay = false;
+		try {
+			if(hostSocket == null) {
 				hostSocket = new Socket("localhost",9898);
-				toServer = new DataOutputStream(hostSocket.getOutputStream());
-				fromServer = new DataInputStream(hostSocket.getInputStream());
-				toServer.writeUTF(username);
-				toServer.flush();
-				//openButton.setName("Refresh");
-				openButton.removeActionListener(this);
-				remove(openButton);
-				revalidate();
-				repaint();
-				
-			}catch(IOException ioe) {
-				ioe.printStackTrace();
-				System.out.println("CONNECTION FAILED");
 			}
+			if(toServer == null) {
+				toServer = new DataOutputStream(hostSocket.getOutputStream());
+			}
+			if(fromServer == null) {
+				fromServer = new DataInputStream(hostSocket.getInputStream());
+			}
+			toServer.writeUTF(ADDME);
 			userListHandle = new Thread(new UserListener());
 			userListHandle.start();
-			
+			turn = false;
+		}catch(IOException ioe) {
+			ioe.printStackTrace();
 		}
+	}
+	
+	public void verifyLogin() {
 		
-		
+		username = lv.getUserName();
+		password = lv.getPassword();
+		try {
+			if(hostSocket == null) {
+				hostSocket = new Socket("localhost",9898);
+			}
+			if(toServer == null) {
+				toServer = new DataOutputStream(hostSocket.getOutputStream());
+			}
+			if(fromServer == null) {
+				fromServer = new DataInputStream(hostSocket.getInputStream());
+			}
+			
+			toServer.writeUTF(username);
+			toServer.writeUTF(password);
+			toServer.flush();
+			String verify = fromServer.readUTF();
+			
+			if (verify.equals(TRUE)) {
+				if(toServerObj == null) {
+					toServerObj = new ObjectOutputStream(hostSocket.getOutputStream());
+				}
+				if(fromServerObj == null) {
+					fromServerObj = new ObjectInputStream(hostSocket.getInputStream());
+				}
+				Object o = fromServerObj.readObject();
+				user = (User) o;
+				lv.setVisible(false);
+				hv = new HomepageView(user, this);
+				hv.setVisible(true);	
+				userListHandle = new Thread(new UserListener());
+				userListHandle.start();	
+			}
+			else {
+				//FAILED LOGIN NOTIF????
+			}		
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	class UserListener implements Runnable{
@@ -133,28 +156,38 @@ public class ShipClient extends JFrame{
 		@Override
 		public void run() {
 			try {
-				
+				hostSocket.setSoTimeout(5000);
 				while(true) {
-					if(!buttonPressed) {
+					if(gamePlay) {
+						break;
+					}
+					Boolean gotLock = false;
+					while(!gotLock) {
+						if(!lock.isLocked()) {
+							lock.lock();
+							gotLock = true;
+						}
+					}
+					try {
 						String message = fromServer.readUTF();
 						if(message.equals(GAMEREQUEST)) {
 							toServer.writeUTF(REQUESTED);
 							String opponentName = fromServer.readUTF();
-							//toServer = new DataOutputStream(hostSocket.getOutputStream());
 							int n = JOptionPane.showOptionDialog(null,
 								    ("New game request from "+opponentName+". Accept?"),
-								    ("GAME REQUSET TO " + username),
+								    ("GAME REQUEST TO " + username),
 								    JOptionPane.YES_NO_OPTION,
 								    JOptionPane.QUESTION_MESSAGE,
 								    null,     //do not use a custom Icon
 								    options,  //the titles of buttons
 								    options[0]); //default button title
 							String response = options[n];
-							System.out.println("USER CHOSE "+response);
 							toServer.writeUTF(response);
 							toServer.flush();
 							if(response.equals(ACCEPT)) {
 								opponent = opponentName; 
+								turn = true;
+								gamePlay = true;
 								gameStart();
 								break;
 							}
@@ -168,77 +201,101 @@ public class ShipClient extends JFrame{
 							}
 							refreshUserList();	
 						}
-					}
+					}catch(SocketTimeoutException sto) {
+					}finally {
+						lock.unlock();
+						Thread.sleep(2000);
+					}		
 					
-				}
-				
-				System.out.println("USER LIST THREAD ENDED: " +username);
-			}catch(IOException ioe) {
+					}
+			}catch(IOException | InterruptedException ioe) {
 				ioe.printStackTrace();
 			}
-			
 		}
 		
 		private void refreshUserList() {
 			SwingUtilities.invokeLater(()->{
-				activeUserPanel.removeAll();
-				activeUserButtons.clear();
-				
-				for(String user: userList.split(",")) {
-					if(!user.equals(username)) {
-						JButton userButton = new JButton(user);
-						userButton.setName(user);
-						userButton.addActionListener(new ChooseOpponentListener());
-						activeUserPanel.add(userButton);
-						activeUserButtons.put(user, userButton);
-					}
-				}
-				
-				activeUserPanel.revalidate();
-				activeUserPanel.repaint();
+				hv.updateUserList(userList);
 			});
 		}
-		
 	}
 	
-	class ChooseOpponentListener implements ActionListener{
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			JButton opponentButton = (JButton) e.getSource();
-			String opponentName = opponentButton.getName();
-			System.out.println("Game Request sent to "+opponentName);
-			buttonPressed = true;
-			try {
-				toServer.writeUTF(GAMEREQUEST);
-				toServer.flush();
-				toServer.writeUTF(opponentName);
-				while(true) {
+	public void chooseOpponent(String opponentName){
+		Boolean gotLock = false;
+		while(!gotLock) {
+			if(!lock.isLocked()) {
+				lock.lock();
+				gotLock = true;
+			}
+		}
+		try {
+			toServer.writeUTF(GAMEREQUEST);
+			toServer.flush();
+			toServer.writeUTF(opponentName);
+			while(true) {
+				try{
 					String response = fromServer.readUTF();
 					if(response.equals(ACCEPT)) {
 						opponent = opponentName;
-						System.out.println("User "+opponentName + " accepted! Commencing game...");
-						buttonPressed = false;
+						gamePlay = true;
 						gameStart();
-						break;//and do other stuff like switch frames
+						break;
 					}else if(response.equals(DENY)){
-						System.out.println("User "+opponentName + " denied your request. Try a different opponent.");
-						buttonPressed = false;
-						//refreshUserList();
+						//ADD A DIALOG BOX TO SHOW THAT IT WAS DENIED
 						break;
 					}
+				}catch(SocketTimeoutException ste) {
+					try {
+						Thread.sleep(5000);
+						toServer.writeUTF(GAMEREQUEST);
+						toServer.flush();
+						toServer.writeUTF(opponentName);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
-				//userListHandle.notify();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			}
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}finally {
+			lock.unlock();
+		}
+	}
+	
+	public void switchToRegistration() {
+		lv.setVisible(false);
+		rv = new RegisterView(this);
+		rv.setVisible(true);
+	}
+	
+	public void attemptRegistration(String username, String password) {;
+		try {
+			if(hostSocket == null) {
+				hostSocket = new Socket("localhost",9898);
+			}
+			if(toServer == null) {
+				toServer = new DataOutputStream(hostSocket.getOutputStream());
+			}
+			if(fromServer == null) {
+				fromServer = new DataInputStream(hostSocket.getInputStream());
 			}
 			
-		}
-		
+			toServer.writeUTF(REGISTER);
+			toServer.writeUTF(username);
+			toServer.writeUTF(password);
+			toServer.flush();
+			String success;
+			success = fromServer.readUTF();
+			if(success.equals(TRUE)) {
+				lv.setVisible(true);
+				rv.setVisible(false);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
 	}
 	
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(()-> new ShipClient().setVisible(true));
+		SwingUtilities.invokeLater(()-> new ShipClient()/*.setVisible(true)*/);
 	}
 }

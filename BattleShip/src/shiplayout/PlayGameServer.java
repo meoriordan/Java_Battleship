@@ -6,8 +6,16 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
+import shiplayout.ShipServer.HandleClientConnect;
 
 public class PlayGameServer {
 	private Socket player1Socket;
@@ -23,86 +31,188 @@ public class PlayGameServer {
 	private static final String SAVED = "SAVED";
 	private static final String LISTENING = "LISTENING";
 	private static final String GRIDSEND = "GRIDSEND";
-	private static final String LOST = "LOST"; //IF I receive this I won
-	private static final String WIN = "WIN"; //IF I receive this I lost
+	private static final String SENDGRID = "SENDGRID";
 	private static final String START = "START";//start game
+	private static final String GOTGRID = "GOTGRID";
 	private Boolean gameOver;
 	private static final String TURN = "TURN"; //give or take turn
+	private static final int WIN = 1000;
+	private static final int LOST = -1000;
+	private static final int SAVE = 0;
+	private String player1;
+	private String player2;
+	private HashMap<String, ArrayList<Integer>> player1Map;
+	private HashMap<String, ArrayList<Integer>> player2Map;
 	
-	public PlayGameServer(Socket player1, Socket player2) throws IOException {
-		primInFromPlayer1 = new DataInputStream(player1.getInputStream());
-		primInFromPlayer2 = new DataInputStream(player2.getInputStream());
-		primOutToPlayer1 = new DataOutputStream(player1.getOutputStream());
-		primOutToPlayer2 = new DataOutputStream(player2.getOutputStream());
+	public PlayGameServer(HandleClientConnect player1,HandleClientConnect player2) throws IOException {
+		primInFromPlayer1 = player1.getDataInput();
+		primInFromPlayer2 = player2.getDataInput();
+		primOutToPlayer1 = player1.getDataOutput();
+		primOutToPlayer2 = player2.getDataOutput();
 		
-		objInFromPlayer1 = new ObjectInputStream(player1.getInputStream());
-		objInFromPlayer2 = new ObjectInputStream(player2.getInputStream());
-		objOutToPlayer1 = new ObjectOutputStream(player1.getOutputStream());
-		objOutToPlayer2 = new ObjectOutputStream(player2.getOutputStream());
+		objInFromPlayer1 = player1.getObjInput();
+		objInFromPlayer2 = player2.getObjInput();
+		objOutToPlayer1 = player1.getObjOutput();
+		objOutToPlayer2 = player2.getObjOutput();
+		
+		this.player1 = player1.getUsername();
+		this.player2 = player2.getUsername();
+		
 		gameOver = false;
-		Thread t = new Thread(new SetGridsRunnable());
-		t.start();
+		JFrame jf = new JFrame("GAME SERVER");
+		jf.setVisible(true);
+		jf.setSize(400,400);
+		jf.setTitle(this.player1 + " vs. " +this.player2);
+		
+		Thread g1 = new Thread(new GetGridsRunnable(this.player1));
+		g1.start();
+		Thread g2 = new Thread(new GetGridsRunnable(this.player2));
+		g2.start();
+		
+		while(true) {
+			if(!g1.isAlive() && !g2.isAlive()) {
+				break;
+			}
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		Thread s1 = new Thread(new SetGridsRunnable(this.player1,player1Map));
+		s1.start();
+		Thread s2 = new Thread(new SetGridsRunnable(this.player2,player2Map));
+		s2.start();
+		
+		while(true) {
+			if(!s1.isAlive() && !s2.isAlive()) {
+				break;
+			}
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		startGamePlay();
 	}
 	
 	class SetGridsRunnable implements Runnable{
+		private String player;
+		private Boolean sentToPlayer;
+		private DataInputStream primInFromPlayer; 
+		private DataOutputStream primOutToPlayer;
+		private ObjectInputStream objInFromPlayer;
+		private ObjectOutputStream objOutToPlayer;
+		private int playerNum;
+		private HashMap<String, ArrayList<Integer>> playerMap;
+		public SetGridsRunnable(String player,HashMap<String, ArrayList<Integer>> playerMap) {
+			this.player = player;
+			this.playerMap = playerMap;
+			if(player1.equals(player)) {
+				primInFromPlayer = primInFromPlayer2;
+				primOutToPlayer = primOutToPlayer2;
+				objInFromPlayer = objInFromPlayer2;
+				objOutToPlayer = objOutToPlayer2;	
+				playerNum = 2;
+			}
+			else if(player2.equals(player)) {
+				primInFromPlayer = primInFromPlayer1;
+				primOutToPlayer = primOutToPlayer1;
+				objInFromPlayer = objInFromPlayer1;
+				objOutToPlayer = objOutToPlayer1;	
+				playerNum =1;
+			}
+			sentToPlayer = false;
+		}
 		
-		private Boolean player1Set = false;
-		private Boolean player2Set = false;;
+		@Override
+		public void run() {
+			while(!sentToPlayer) {
+				String playerMessage;
+				try {
+					playerMessage = primInFromPlayer.readUTF();
+					if(playerMessage.equals(SENDGRID)) {
+						primOutToPlayer.writeUTF(GRIDSEND);
+						primOutToPlayer.flush();
+						objOutToPlayer.writeObject(playerMap);
+					}
+					if(playerMessage.equals(GOTGRID)) {
+						sentToPlayer = true;
+						break;
+					}
+				} catch(SocketException se) {
+					break;
+				}
+				catch (IOException e) {
+					e.printStackTrace();
+				}
+			}	
+		}
+	}
+	
+	class GetGridsRunnable implements Runnable{
+		private String player;
+		private Boolean gridReceived;
+		private HashMap<String, ArrayList<Integer>> playerMap;
+		private DataInputStream primInFromPlayer; 
+		private DataOutputStream primOutToPlayer;
+		private ObjectInputStream objInFromPlayer;
+		private ObjectOutputStream objOutToPlayer;
+		
+		public GetGridsRunnable(String player) {
+			playerMap = null;
+			this.player =player;
+			gridReceived = false;
+			if(player1.equals(player)) {
+				primInFromPlayer = primInFromPlayer1;
+				primOutToPlayer = primOutToPlayer1;
+				objInFromPlayer = objInFromPlayer1;
+				objOutToPlayer = objOutToPlayer1;	
+			}
+			else if(player2.equals(player)) {
+				primInFromPlayer = primInFromPlayer2;
+				primOutToPlayer = primOutToPlayer2;
+				objInFromPlayer = objInFromPlayer2;
+				objOutToPlayer = objOutToPlayer2;	
+			}
+		}
 
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
-			while(!player1Set || !player2Set) {
+			while(!gridReceived) {
 				try {
-					
-					String player1Message = primInFromPlayer1.readUTF();
-					String player2Message = primInFromPlayer2.readUTF();
-					
-					if(player1Message.equals(SAVED)) {
-						primOutToPlayer1.writeUTF(LISTENING);
-						HashMap<String, ArrayList<Integer>> player1Map = (HashMap<String, ArrayList<Integer>>) objInFromPlayer1.readObject();
-						primOutToPlayer1.flush();
-						if(player1Map != null) {
-							primOutToPlayer2.writeUTF(GRIDSEND);
-							primOutToPlayer2.flush();
-							objOutToPlayer2.writeObject(player1Map);
-							objOutToPlayer2.flush();
-							player2Set = true;
+					String playerMessage = primInFromPlayer.readUTF();
+
+					if(playerMessage.equals(SAVED)) {
+						primOutToPlayer.writeUTF(LISTENING);
+						primOutToPlayer.flush();
+						playerMap = (HashMap<String, ArrayList<Integer>>) objInFromPlayer.readObject();
+						if(playerMap  != null) {
+							gridReceived = true;
+							primOutToPlayer.writeUTF(GOTGRID);
+							primOutToPlayer.flush();
+							if(player.equals(player1)) {
+								player1Map = playerMap;
+							}
+							else {
+								player2Map = playerMap;
+							}
+							break;
 						}
-					}
-					if(player2Message.equals(SAVED)) {
-						primOutToPlayer2.writeUTF(LISTENING);
-						HashMap<String, ArrayList<Integer>> player2Map = (HashMap<String, ArrayList<Integer>>) objInFromPlayer2.readObject();
-						primOutToPlayer2.flush();
-						if(player2Map != null) {
-							primOutToPlayer1.writeUTF(GRIDSEND);
-							primOutToPlayer2.flush();
-							objOutToPlayer2.writeObject(player2Map);
-							objOutToPlayer2.flush();
-							player1Set = true;
-						}
-					}
-					
-					objInFromPlayer1.close();
-					objOutToPlayer1.close();
-					objInFromPlayer2.close();
-					objOutToPlayer2.close();
-					startGamePlay();
-					
-				
-				} catch (IOException ioe) {
-					// TODO Auto-generated catch block
-					ioe.printStackTrace();
+					}	
+				} catch (SocketException se) {
+					System.out.println("Socket Exception: Connection Reset...Player 1");
+					break;
 				}catch(ClassNotFoundException cnfe) {
-					//if objInFromPlayer does not find an object
 					cnfe.printStackTrace();
+				}catch(IOException ioe) {
+					ioe.printStackTrace();
 				}
 			}
-			
 		}
-		
 	}
-	
 
 	class GamePlayRunnable implements Runnable{
 		
@@ -110,71 +220,71 @@ public class PlayGameServer {
 
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
-			try {
-				String player1Message = primInFromPlayer1.readUTF();
-				String player2Message = primInFromPlayer2.readUTF();
 				while(!gameOver) {
-					if(turns%2 == 1) { // Player1s turn
-						int player1Guess = primInFromPlayer1.readInt();
-						if(player1Guess>0) {
-							primOutToPlayer1.writeUTF(SAVED);
-							primOutToPlayer1.flush();
-							primOutToPlayer2.writeInt(player1Guess);
-							primOutToPlayer2.flush();
-							player2Message = primInFromPlayer2.readUTF();
-							if(player2Message.equals(LOST)) {
-								primOutToPlayer2.writeUTF(WIN);
-								primOutToPlayer1.writeUTF(LOST);
-								gameOver = true;
-							}else if(player2Message.equals(SAVED)) {
-								turns++;
-								continue;
-							}
-						}	
-						
-					}else {
-						int player2Guess = primInFromPlayer2.readInt();
-						if(player2Guess>0) {
-							primOutToPlayer2.writeUTF(SAVED);
-							primOutToPlayer2.flush();
-							primOutToPlayer1.writeInt(player2Guess);
-							primOutToPlayer1.flush();
-							player1Message = primInFromPlayer1.readUTF();
-							if(player1Message.equals(LOST)) {
-								primOutToPlayer1.writeUTF(WIN);
-								primOutToPlayer2.writeUTF(LOST);
-								gameOver = true;
-							}else if(player1Message.equals(SAVED)) {
-								turns++;
-								continue;
+					try {
+						if(turns%2 == 0) { // Player1s turn
+							int player1Guess = primInFromPlayer1.readInt();
+							if(player1Guess>0) {
+								primOutToPlayer2.writeInt(player1Guess);
+								primOutToPlayer2.flush();
+								while(true) {
+									try {
+										int player2Message = primInFromPlayer2.readInt();
+										if(player2Message == LOST) {
+											primOutToPlayer2.writeInt(WIN);
+											primOutToPlayer1.writeInt(LOST);
+											gameOver = true;
+											break;
+										}else if(player2Message == SAVE) {
+											primOutToPlayer2.writeInt(SAVE);
+											primOutToPlayer1.writeInt(SAVE);
+											turns++;
+											break;
+										}
+									}catch(SocketTimeoutException ste) {
+									}
+								}
+							}	
+						}else {
+							int player2Guess = primInFromPlayer2.readInt();
+							if(player2Guess>0) {
+								primOutToPlayer1.writeInt(player2Guess);
+								primOutToPlayer1.flush();
+								while(true) {
+									try {
+										int player1Message = primInFromPlayer1.readInt();
+										if(player1Message == LOST) {
+											primOutToPlayer1.writeInt(WIN);
+											primOutToPlayer2.writeInt(LOST);
+											gameOver = true;
+											break;
+										}else if(player1Message == SAVE) {
+											primOutToPlayer1.writeInt(SAVE);
+											primOutToPlayer2.writeInt(SAVE);
+											turns++;
+											break;
+										}
+									}catch(SocketTimeoutException ste) {
+									}
+								}
 							}
 						}
-						
-					}
+				}catch(SocketTimeoutException ste) {
+				}catch(SocketException se) {
+					se.printStackTrace();
+					System.out.println("SOCKET CLOSED UNEXPECTEDLY RESTART");
+					break;
 				}
-				
-				primInFromPlayer1.close();
-				primOutToPlayer1.close();
-				primInFromPlayer2.close();
-				primOutToPlayer2.close();				
-				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}finally {
-				
-			}
-			
-			
-		}
-		
+				catch(IOException ioe) {
+					ioe.printStackTrace();
+					break;
+				}			
+				}
+		}	
 	}
 	
 	public void startGamePlay() {
 		Thread t = new Thread(new GamePlayRunnable());
 		t.start();
 	}
-	
-	
 }
