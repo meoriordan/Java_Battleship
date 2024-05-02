@@ -2,6 +2,7 @@ package shiplayout;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,7 +20,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -227,7 +230,22 @@ public class ShipClient {
 						gameStart();
 						break;
 					}else if(response.equals(DENY)){
-						//ADD A DIALOG BOX TO SHOW THAT IT WAS DENIED
+						JDialog dialog = new JDialog();
+						dialog.setTitle(opponentName + "denied your request.");
+						dialog.setLayout(new FlowLayout());
+						
+						JLabel label = new JLabel("Please try a different opponent");
+						dialog.add(label);
+						
+						JButton okButton = new JButton("OK");
+						okButton.setSize(80,50);
+						okButton.addActionListener(e -> {dialog.dispose();});
+						dialog.add(okButton);
+						
+						dialog.setSize(400,100);
+						dialog.setLocationRelativeTo(null);
+						dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+						dialog.setVisible(true);	
 						break;
 					}
 				}catch(SocketTimeoutException ste) {
