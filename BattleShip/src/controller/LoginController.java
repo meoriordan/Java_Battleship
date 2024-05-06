@@ -1,5 +1,6 @@
 package controller;
 
+import java.util.ArrayList;
 import views.HomepageView;
 import views.LoginView;
 import dao.UserDao;
@@ -29,8 +30,14 @@ public class LoginController {
 	}
 	
 	public User retrieveUser() {
-		user = ud.retrieveUser(username, password);
-		return user;
+		this.user = ud.retrieveUser(username, password);
+		return this.user;
+	}
+	
+	public ArrayList<ArrayList<String>> retrieveGames() {
+		retrieveUser();
+		ArrayList<ArrayList<String>> games = ud.getGames(user.getUserID());
+		return games;
 	}
 
 }

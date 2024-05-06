@@ -9,6 +9,7 @@ INSERT INTO users (username, password) VALUES ('elizabeth','password');
 INSERT INTO users (username, password) VALUES ('odette','test123');
 INSERT INTO users (username, password) VALUES ('joe','pass');
 INSERT INTO users (username, password) VALUES ('john','mypass');
+INSERT INTO users (username, password) VALUES ("anne","rabbit");
 
 CREATE TABLE games (
 	game_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,9 +21,11 @@ CREATE TABLE games (
 	 FOREIGN KEY(winner) REFERENCES users(user_id)
 );
 
-INSERT INTO games VALUES (1,1,2,0,15,1);
-INSERT INTO games VALUES (2,1,2,17,15,0);
-INSERT INTO games VALUES (3,1,3,5,17,1);
-INSERT INTO games VALUES (4,3,4,17,13,0);
+INSERT INTO games (user0_id, user1_id, winner) VALUES (1,2,2);
+INSERT INTO games (user0_id, user1_id, winner) VALUES (2,3,3);
+INSERT INTO games (user0_id, user1_id, winner) VALUES (3,4,3);
+INSERT INTO games (user0_id, user1_id, winner) VALUES (5,1,5);
+INSERT INTO games (user0_id, user1_id, winner) VALUES (3,5,3);
+INSERT INTO games (user0_id, user1_id, winner) VALUES (1,4,1);
 
 

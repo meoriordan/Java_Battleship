@@ -1,6 +1,8 @@
 package dao;
 
 import java.sql.DriverManager;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import models.User;
 
@@ -32,6 +34,14 @@ public class UserDao {
 	
 	private static final String 
 	UPDATE_POINTS = "UPDATE USERS SET totalPoints = ? WHERE user_id = ?";
+	
+	private static final String 
+	GET_GAMES = "SELECT u1.username as user1name, u2.username as user2name, "
+			+ " CASE WHEN g.winner = user0_id then u1.username "
+			+ "		WHEN g.winner = user1_id then u2.username "
+			+ " else null end as winnername FROM games g "
+			+ " join users u1 on g.user0_id = u1.user_id"
+			+ " join users u2 on g.user1_id = u2.user_id WHERE user0_id = ? or user1_id = ? ;"; 
 	
 	
 	
@@ -111,7 +121,7 @@ public class UserDao {
 			
 			ResultSet rset = pstmt.executeQuery();
 			user = new User(rset.getInt(1), username, password, rset.getInt(4));	
-			conn.close();
+//			conn.close();
 		}
 		catch (SQLException e) {
 			e.printStackTrace();
@@ -201,87 +211,33 @@ public class UserDao {
 			return false;
 		}
 	}
+	
+	public ArrayList<ArrayList<String>> getGames(int userID) {
+		ArrayList<ArrayList<String>> pastGames = null;
+		
+		try {
+			PreparedStatement pstmt = conn.prepareStatement(GET_GAMES);
+			
+			pstmt.setInt(1, userID);
+			pstmt.setInt(2, userID);	
+			
+			ResultSet rset = pstmt.executeQuery();
+			
+			if (rset.isBeforeFirst()) {    
+				pastGames = new ArrayList<ArrayList<String>>();
+				
+				while (rset.next()) {
+					pastGames.add(new ArrayList<String>(Arrays.asList(rset.getString(1), rset.getString(2), rset.getString(3))));
+				}
+			}			
+			conn.close();
+			return pastGames;
+
+		}
+		catch (SQLException e) {
+			e.printStackTrace();
+			return pastGames;
+		}		
+	}
 }
 	
-	
-
-
-
-
-//
-//	
-//	public void createUser(String username, String password) {
-//		try {
-//			Statement statement = conn.createStatement();
-//			int x = statement.executeUpdate("INSERT INTO users (username, password) VALUES " + "('" + username + "'" + ",'" + password + "')");
-//			System.out.println(x);	
-//		}
-//		catch (SQLException e) {
-//			e.printStackTrace();
-//		}
-//
-//		
-//	}
-//	
-//	public ResultSet loginUser(String username, String password) {
-//		ResultSet resultSet = null;
-//		try {
-//			Statement statement = conn.createStatement();
-//			resultSet = statement.executeQuery("SELECT * FROM users WHERE username = '" + username + "' and password  = '" + password + "';");
-//		}
-//		catch (SQLException e) {
-//			e.printStackTrace();
-//			System.exit(0);
-//		}
-//		return resultSet;
-//
-//		
-//	}
-//	
-//	public static void main(String[] args) throws SQLException {
-//		String url = "jdbc:sqlite:/Users/elizabethoriordan/battleship.db";
-//		Connection conn = DriverManager.getConnection(url);
-//		
-//		   System.out.println("Database connected");
-//
-//		    // Create a statement
-//		    Statement statement = null;
-//			try {
-//				statement = conn.createStatement();
-//			} catch (SQLException e) {
-//				e.printStackTrace();
-//				System.exit(0);
-//			}
-//
-//		    // Execute a statement
-//		    ResultSet resultSet = null;
-//			try {
-//				resultSet = statement.executeQuery
-//				  ("select * from users;'");
-//			} catch (SQLException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//				System.exit(0);
-//			}
-//
-//		    // Iterate through the result and print the student names
-//		    try {
-//				while (resultSet.next())
-//				  System.out.println(resultSet.getString(1) + "\t" +
-//				    resultSet.getString(2));
-//			} catch (SQLException e) {
-//				e.printStackTrace();
-//				System.exit(0);
-//			}
-//
-//		    // Close the connection
-//		    try {
-//				conn.close();
-//			} catch (SQLException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//				System.exit(0);
-//			}
-//		  }
-//		}
-

@@ -20,7 +20,7 @@ import java.util.HashMap;
 public class LoginView extends JFrame {
 	
 	public static final int DEFAULT_WIDTH = 500;
-	public static final int DEFAULT_HEIGHT = 500;
+	public static final int DEFAULT_HEIGHT = 300;
 	private JTextField userNameField;
 	private JTextField passwordField;
 	String username;

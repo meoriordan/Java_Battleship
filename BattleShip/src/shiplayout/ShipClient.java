@@ -130,8 +130,11 @@ public class ShipClient {
 				}
 				Object o = fromServerObj.readObject();
 				user = (User) o;
+				
+				Object o2 = fromServerObj.readObject();
+				ArrayList<ArrayList<String>> pastGames = (ArrayList<ArrayList<String>>) o2;
 				lv.setVisible(false);
-				hv = new HomepageView(user, this);
+				hv = new HomepageView(user, this, pastGames);
 				hv.setVisible(true);	
 				userListHandle = new Thread(new UserListener());
 				userListHandle.start();	

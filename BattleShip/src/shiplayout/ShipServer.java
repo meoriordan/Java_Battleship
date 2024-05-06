@@ -174,10 +174,12 @@ public class ShipServer extends JFrame implements Runnable{
 	        		outputToThisClient.flush();
 	        		threadMap.put(username, this);
 	        		this.username = username;	
+		        	ArrayList<ArrayList<String>> pastGames = lc.retrieveGames();
+		        	outputToClientObj.writeObject(pastGames);
+		        	postUserList();
+		        	lc = null;
 	        	}
-		        postUserList();
-		        lc = null;
-	    	}
+			}
 	    	catch (IOException e) {
 	    		e.printStackTrace();
 	    	} 
