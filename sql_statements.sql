@@ -11,14 +11,13 @@ INSERT INTO users (username, password) VALUES ('joe','pass');
 INSERT INTO users (username, password) VALUES ('john','mypass');
 
 CREATE TABLE games (
-	game_id INTEGER PRIMARY KEY AUTOINCREMENT;
+	game_id INTEGER PRIMARY KEY AUTOINCREMENT,
 	user0_id INTEGER,
 	user1_id INTEGER,
-	score0 INTEGER,
-	score1 INTEGER,
 	winner INTEGER,
 	 FOREIGN KEY(user0_id) REFERENCES users(user_id),
-	 FOREIGN KEY(user1_id) REFERENCES users(user_id)
+	 FOREIGN KEY(user1_id) REFERENCES users(user_id),
+	 FOREIGN KEY(winner) REFERENCES users(user_id)
 );
 
 INSERT INTO games VALUES (1,1,2,0,15,1);

@@ -60,7 +60,7 @@ public class PlayGameClient {
 	private static final int SAVE = 0;
 	private Boolean ongoingTurn;
 	
-	public PlayGameClient(User user, String opponent,int gameID,Boolean turn,Pair<DataOutputStream,DataInputStream> dataStreams,Pair<ObjectOutputStream,ObjectInputStream> objStreams,ShipClient sc) {
+	public PlayGameClient(User user, String opponent, int gameID,Boolean turn, Pair<DataOutputStream, DataInputStream> dataStreams, Pair<ObjectOutputStream, ObjectInputStream> objStreams, ShipClient sc) {
 		this.opponent = opponent;
 		this.user = user;
 		this.turn = turn;

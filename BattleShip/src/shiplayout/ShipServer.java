@@ -22,6 +22,7 @@ import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+
 import controller.LoginController;
 import controller.RegisterController;
 import models.User;
@@ -103,12 +104,16 @@ public class ShipServer extends JFrame implements Runnable{
 			try {
 				outputToThisClient = new DataOutputStream(clientSocket.getOutputStream());
 				inputFromThisClient = new DataInputStream(clientSocket.getInputStream());
-			}catch(IOException ioe) {
+			} catch(IOException ioe) {
 				ioe.printStackTrace();
 			}
 		}
 		public String getUsername() {
 			return this.username;
+		}
+		
+		public User getUser() {
+			return user;
 		}
 		
 		public DataOutputStream getDataOutput() {
@@ -148,12 +153,11 @@ public class ShipServer extends JFrame implements Runnable{
 			gamePlay = false;
 			this.opponentHCC = null;
 			opponentHCC.setGamePlay(false);
-			
 		}
 		
-		public void attemptLogin(String userName) {
+		public void attemptLogin() {
 			try {
-	        	String username = userName;
+	        	String username = inputFromThisClient.readUTF();
 	        	String password = inputFromThisClient.readUTF();
 
 	        	LoginController lc = new LoginController(username, password);
@@ -172,6 +176,7 @@ public class ShipServer extends JFrame implements Runnable{
 	        		this.username = username;	
 	        	}
 		        postUserList();
+		        lc = null;
 	    	}
 	    	catch (IOException e) {
 	    		e.printStackTrace();
@@ -186,6 +191,7 @@ public class ShipServer extends JFrame implements Runnable{
 				boolean creationSuccessful = rv.createUser();
 				outputToThisClient.writeUTF(creationSuccessful ? TRUE : FALSE);
 				outputToThisClient.flush();
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -234,13 +240,13 @@ public class ShipServer extends JFrame implements Runnable{
 		@Override
 		public void run() {
 			try {
-				clientSocket.setSoTimeout(5000);
+				clientSocket.setSoTimeout(30000);
 				while(true) {
 					if(!gamePlay) {
 						try {
 							String message = inputFromThisClient.readUTF();
-						    if(!INVALID_USERNAMES.contains(message)&& message != null) {
-								attemptLogin(message);								
+						    if(message.equals(LOGIN)) {
+								attemptLogin();								
 							}
 							else if(message.equals(REGISTER)) {
 								attemptRegistration();
@@ -287,7 +293,7 @@ public class ShipServer extends JFrame implements Runnable{
 		postUserList();
 	}
 	
-	private void postUserList(DataOutputStream out )throws IOException {
+	private void postUserList(DataOutputStream out)throws IOException {
 		String userList = new String("");
 		for(String username : threadMap.keySet()) {
 			userList += username + ",";

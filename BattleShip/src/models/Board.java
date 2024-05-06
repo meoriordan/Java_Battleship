@@ -32,7 +32,7 @@ public class Board {
 		this.boardID = boardIDs++;
 		this.gameID = gameID;
 		this.username = username;
-		this.opponentName = opponentName;;
+		this.opponentName = opponentName;
 		playerGrid = new Grid(this.boardID);
 		opponentGrid = new Grid(this.boardID);
 		populateShipTypes();

@@ -16,6 +16,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import shiplayout.ShipServer.HandleClientConnect;
+import models.User;
+import models.Game;
 
 public class PlayGameServer {
 	private Socket player1Socket;
@@ -41,6 +43,9 @@ public class PlayGameServer {
 	private static final int SAVE = 0;
 	private String player1;
 	private String player2;
+	private User player1User;
+	private User player2User;
+	private Game game;
 	private HashMap<String, ArrayList<Integer>> player1Map;
 	private HashMap<String, ArrayList<Integer>> player2Map;
 	
@@ -58,11 +63,16 @@ public class PlayGameServer {
 		this.player1 = player1.getUsername();
 		this.player2 = player2.getUsername();
 		
+		this.player1User = player1.getUser();
+		this.player2User = player2.getUser();
+		
+		this.game = new Game(this.player1User, this.player2User);
+		
 		gameOver = false;
 		JFrame jf = new JFrame("GAME SERVER");
 		jf.setVisible(true);
 		jf.setSize(400,400);
-		jf.setTitle(this.player1 + " vs. " +this.player2);
+		jf.setTitle(this.player1 + " vs. " + this.player2);
 		
 		Thread g1 = new Thread(new GetGridsRunnable(this.player1));
 		g1.start();
@@ -98,7 +108,7 @@ public class PlayGameServer {
 		startGamePlay();
 	}
 	
-	class SetGridsRunnable implements Runnable{
+	class SetGridsRunnable implements Runnable {
 		private String player;
 		private Boolean sentToPlayer;
 		private DataInputStream primInFromPlayer; 
@@ -122,7 +132,7 @@ public class PlayGameServer {
 				primOutToPlayer = primOutToPlayer1;
 				objInFromPlayer = objInFromPlayer1;
 				objOutToPlayer = objOutToPlayer1;	
-				playerNum =1;
+				playerNum = 1;
 			}
 			sentToPlayer = false;
 		}
@@ -163,7 +173,7 @@ public class PlayGameServer {
 		
 		public GetGridsRunnable(String player) {
 			playerMap = null;
-			this.player =player;
+			this.player = player;
 			gridReceived = false;
 			if(player1.equals(player)) {
 				primInFromPlayer = primInFromPlayer1;
@@ -189,7 +199,7 @@ public class PlayGameServer {
 						primOutToPlayer.writeUTF(LISTENING);
 						primOutToPlayer.flush();
 						playerMap = (HashMap<String, ArrayList<Integer>>) objInFromPlayer.readObject();
-						if(playerMap  != null) {
+						if(playerMap != null) {
 							gridReceived = true;
 							primOutToPlayer.writeUTF(GOTGRID);
 							primOutToPlayer.flush();
@@ -214,7 +224,7 @@ public class PlayGameServer {
 		}
 	}
 
-	class GamePlayRunnable implements Runnable{
+	class GamePlayRunnable implements Runnable {
 		
 		private int turns = 1;
 
@@ -234,6 +244,7 @@ public class PlayGameServer {
 											primOutToPlayer2.writeInt(WIN);
 											primOutToPlayer1.writeInt(LOST);
 											gameOver = true;
+											game.gameOver(player1User);
 											break;
 										}else if(player2Message == SAVE) {
 											primOutToPlayer2.writeInt(SAVE);
@@ -245,7 +256,7 @@ public class PlayGameServer {
 									}
 								}
 							}	
-						}else {
+						} else {
 							int player2Guess = primInFromPlayer2.readInt();
 							if(player2Guess>0) {
 								primOutToPlayer1.writeInt(player2Guess);
@@ -257,6 +268,7 @@ public class PlayGameServer {
 											primOutToPlayer1.writeInt(WIN);
 											primOutToPlayer2.writeInt(LOST);
 											gameOver = true;
+											game.gameOver(player2User);
 											break;
 										}else if(player1Message == SAVE) {
 											primOutToPlayer1.writeInt(SAVE);

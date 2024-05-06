@@ -37,6 +37,7 @@ public class HomepageView extends JFrame {
 			this.user = user;
 			this.myClient = myClient;
 			add(panel);
+			this.setTitle(user.getUsername());
 			setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 			setVisible(true);
 			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

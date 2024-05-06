@@ -68,7 +68,22 @@ public class ShipClient {
 	private Boolean gamePlay;	
 	
 	public ShipClient() {
-		lv = new LoginView(this);
+		lv = new LoginView(this);  
+		try {		
+			if (hostSocket == null) {
+				hostSocket = new Socket("localhost",9898);
+			}
+			if (toServer == null) {
+				toServer = new DataOutputStream(hostSocket.getOutputStream());
+			}
+			if (fromServer == null) {
+				fromServer = new DataInputStream(hostSocket.getInputStream());
+			}	
+		}
+		catch (IOException e){
+			e.printStackTrace();
+		}
+
 		options = new String[] {ACCEPT,DENY};
 		turn = false;
 		gamePlay = false;
@@ -80,10 +95,11 @@ public class ShipClient {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		hv.setVisible(false);
 		Pair<DataOutputStream,DataInputStream> serverDataStreams = new Pair<DataOutputStream,DataInputStream>(toServer,fromServer);
 		Pair<ObjectOutputStream,ObjectInputStream> serverObjStreams = new Pair<ObjectOutputStream,ObjectInputStream>(toServerObj,fromServerObj);
 		PlayGameClient pgc = new PlayGameClient(user,opponent,0,turn, serverDataStreams,serverObjStreams,this);
-		hv.setVisible(false);
+
 	}
 	
 	public void renewHomepage() {
@@ -99,16 +115,7 @@ public class ShipClient {
 		username = lv.getUserName();
 		password = lv.getPassword();
 		try {
-			if(hostSocket == null) {
-				hostSocket = new Socket("localhost",9898);
-			}
-			if(toServer == null) {
-				toServer = new DataOutputStream(hostSocket.getOutputStream());
-			}
-			if(fromServer == null) {
-				fromServer = new DataInputStream(hostSocket.getInputStream());
-			}
-			
+			toServer.writeUTF(LOGIN);
 			toServer.writeUTF(username);
 			toServer.writeUTF(password);
 			toServer.flush();
@@ -129,9 +136,24 @@ public class ShipClient {
 				userListHandle = new Thread(new UserListener());
 				userListHandle.start();	
 			}
-			else {
-				//FAILED LOGIN NOTIF????
-			}		
+ 			else if (verify.equals(FALSE)) {
+				JDialog dialog = new JDialog();
+				dialog.setTitle("Incorrect Login Info");
+				dialog.setLayout(new FlowLayout());
+				
+				JLabel label = new JLabel("Wrong username or password");
+				dialog.add(label);
+				
+				JButton okButton = new JButton("OK");
+				okButton.setSize(80,50);
+				okButton.addActionListener(e -> {dialog.dispose();});
+				dialog.add(okButton);
+				
+				dialog.setSize(400,100);
+				dialog.setLocationRelativeTo(null);
+				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				dialog.setVisible(true);	
+ 			}	
 		}
 		catch (IOException e) {
 			e.printStackTrace();
@@ -184,14 +206,14 @@ public class ShipClient {
 								refreshUserList();
 							}
 						}
-						else{
+						else {
 							if(!INVALID_USERNAMES.contains(message)) {
 								userList  = message;
 							}
 							refreshUserList();	
 						}
-					}catch(SocketTimeoutException sto) {
-					}finally {
+					} catch (SocketTimeoutException sto) {
+					} finally {
 						lock.unlock();
 						Thread.sleep(2000);
 					}		
@@ -261,7 +283,7 @@ public class ShipClient {
 			}
 		} catch (IOException e1) {
 			e1.printStackTrace();
-		}finally {
+		} finally {
 			lock.unlock();
 		}
 	}
@@ -273,17 +295,7 @@ public class ShipClient {
 	}
 	
 	public void attemptRegistration(String username, String password) {;
-		try {
-			if(hostSocket == null) {
-				hostSocket = new Socket("localhost",9898);
-			}
-			if(toServer == null) {
-				toServer = new DataOutputStream(hostSocket.getOutputStream());
-			}
-			if(fromServer == null) {
-				fromServer = new DataInputStream(hostSocket.getInputStream());
-			}
-			
+		try {			
 			toServer.writeUTF(REGISTER);
 			toServer.writeUTF(username);
 			toServer.writeUTF(password);
@@ -294,6 +306,24 @@ public class ShipClient {
 				lv.setVisible(true);
 				rv.setVisible(false);
 			}
+ 			else if (success.equals(FALSE)) {
+				JDialog dialog = new JDialog();
+				dialog.setTitle("Choose different username");
+				dialog.setLayout(new FlowLayout());
+				
+				JLabel label = new JLabel("This username is already taken.");
+				dialog.add(label);
+				
+				JButton okButton = new JButton("OK");
+				okButton.setSize(80,50);
+				okButton.addActionListener(e -> {dialog.dispose();});
+				dialog.add(okButton);
+				
+				dialog.setSize(400,100);
+				dialog.setLocationRelativeTo(null);
+				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				dialog.setVisible(true);	
+ 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 
