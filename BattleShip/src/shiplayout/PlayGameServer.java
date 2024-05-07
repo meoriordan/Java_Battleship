@@ -48,8 +48,13 @@ public class PlayGameServer {
 	private Game game;
 	private HashMap<String, ArrayList<Integer>> player1Map;
 	private HashMap<String, ArrayList<Integer>> player2Map;
+	private HandleClientConnect p1;
+	private HandleClientConnect p2;
 	
 	public PlayGameServer(HandleClientConnect player1,HandleClientConnect player2) throws IOException {
+		p1 = player1;
+		p2 = player2;
+		
 		primInFromPlayer1 = player1.getDataInput();
 		primInFromPlayer2 = player2.getDataInput();
 		primOutToPlayer1 = player1.getDataOutput();
@@ -69,10 +74,10 @@ public class PlayGameServer {
 		this.game = new Game(this.player1User, this.player2User);
 		
 		gameOver = false;
-		JFrame jf = new JFrame("GAME SERVER");
-		jf.setVisible(true);
-		jf.setSize(400,400);
-		jf.setTitle(this.player1 + " vs. " + this.player2);
+//		JFrame jf = new JFrame("GAME SERVER");
+//		jf.setVisible(true);
+//		jf.setSize(400,400);
+//		jf.setTitle(this.player1 + " vs. " + this.player2);
 		
 		Thread g1 = new Thread(new GetGridsRunnable(this.player1));
 		g1.start();
@@ -245,6 +250,7 @@ public class PlayGameServer {
 											primOutToPlayer1.writeInt(LOST);
 											gameOver = true;
 											game.gameOver(player1User);
+											p2.gameEnd();
 											break;
 										}else if(player2Message == SAVE) {
 											primOutToPlayer2.writeInt(SAVE);
@@ -269,6 +275,7 @@ public class PlayGameServer {
 											primOutToPlayer2.writeInt(LOST);
 											gameOver = true;
 											game.gameOver(player2User);
+											p1.gameEnd();
 											break;
 										}else if(player1Message == SAVE) {
 											primOutToPlayer1.writeInt(SAVE);

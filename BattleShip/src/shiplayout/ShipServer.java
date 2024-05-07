@@ -151,8 +151,11 @@ public class ShipServer extends JFrame implements Runnable{
 		
 		public void gameEnd() {
 			gamePlay = false;
-			this.opponentHCC = null;
+    		threadMap.put(username, this);
 			opponentHCC.setGamePlay(false);
+			threadMap.put(opponentHCC.getUsername(), opponentHCC);
+			this.opponentHCC = null;
+    		postUserList();
 		}
 		
 		public void attemptLogin() {
