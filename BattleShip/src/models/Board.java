@@ -2,8 +2,9 @@ package models;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import shiplayout.Ship;
-import shiplayout.SnapGrid;
+
+import views.Ship;
+import views.SnapGrid;
 
 public class Board {
 	

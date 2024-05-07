@@ -7,8 +7,8 @@ import java.util.HashMap;
 
 import javax.swing.JButton;
 
-import shiplayout.Ship;
-import shiplayout.SnapGrid;
+import views.Ship;
+import views.SnapGrid;
 
 public class SaveButtonListener implements ActionListener {
 	private SnapGrid sg;

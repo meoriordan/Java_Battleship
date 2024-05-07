@@ -26,11 +26,11 @@ import javax.swing.JLabel;
 import models.Board;
 import models.Grid;
 import models.User;
-import shiplayout.ButtonGrid;
 import shiplayout.Pair;
-import shiplayout.Ship;
 import shiplayout.ShipClient;
-import shiplayout.SnapGrid;
+import views.ButtonGrid;
+import views.Ship;
+import views.SnapGrid;
 
 public class PlayGameClient {
 	

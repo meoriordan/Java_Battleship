@@ -2,7 +2,6 @@ package views;
 
 import controller.LoginController;
 import shiplayout.ShipClient;
-import Client.Client;
 
 import java.awt.*;
 import javax.swing.*;

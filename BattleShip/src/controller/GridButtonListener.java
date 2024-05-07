@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 import javax.swing.JButton;
 
-import shiplayout.ButtonGrid;
+import views.ButtonGrid;
 
 public class GridButtonListener implements ActionListener{
 	private HashMap<JButton,Boolean> pushedButtons;

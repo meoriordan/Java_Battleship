@@ -24,7 +24,6 @@ public class HomepageView extends JFrame {
 	public static final int DEFAULT_HEIGHT = 300;
 	private JTextField userNameField;
 	private JTextField passwordField;
-	private ConnectUsers cu;
 	private User user;
 	private String onlineUsers;
 	private ShipClient myClient;
