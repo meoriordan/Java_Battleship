@@ -3,12 +3,10 @@ package views;
 import controller.LoginController;
 import models.User;
 import shiplayout.ShipClient;
-import controller.ConnectUsers;
 
 import java.awt.*;
 import javax.swing.*;
 
-import Client.Client;
 
 import java.awt.event.*;
 import java.io.DataInputStream;

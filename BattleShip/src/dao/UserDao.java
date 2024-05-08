@@ -7,7 +7,9 @@ import java.util.Arrays;
 import models.User;
 
 import java.sql.*;
-
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 //create new user - DONE
 //verify user - DONE
@@ -67,8 +69,14 @@ public class UserDao {
 		try {
 			PreparedStatement pstmt = conn.prepareStatement(INSERT);
 			
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			md.update(password.getBytes());
+			byte[] bytes = md.digest();
+			BigInteger no = new BigInteger(1, bytes);
+			String hashtext = no.toString(16);
+						
 			pstmt.setString(1, username);
-			pstmt.setString(2, password);
+			pstmt.setString(2, hashtext);
 			pstmt.setInt(3, 0);
 			
 			int count = pstmt.executeUpdate();
@@ -85,16 +93,29 @@ public class UserDao {
 		catch (SQLException e) {
 			e.printStackTrace();
 			return false;
+		} 
+		catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
 		}
 	}
 	
 	
 	public boolean findUser(String username, String password) {
 		try {
+			
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			md.update(password.getBytes());
+			byte[] bytes = md.digest();
+			BigInteger no = new BigInteger(1, bytes);
+			String hashtext = no.toString(16);
+			
+			
 			PreparedStatement pstmt = conn.prepareStatement(FIND_BY_USERNAME_PASSWORD);
 			
 			pstmt.setString(1, username);
-			pstmt.setString(2, password);
+			pstmt.setString(2, hashtext);
 			
 			ResultSet rset = pstmt.executeQuery();
 			
@@ -109,21 +130,37 @@ public class UserDao {
 			e.printStackTrace();
 			return false;
 		}
+		catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	public User retrieveUser(String username, String password) {
 		User user = null;
 		try {
+			
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			md.update(password.getBytes());
+			byte[] bytes = md.digest();
+			BigInteger no = new BigInteger(1, bytes);
+			String hashtext = no.toString(16);
+			
 			PreparedStatement pstmt = conn.prepareStatement(FIND_BY_USERNAME_PASSWORD);
 			
 			pstmt.setString(1, username);
-			pstmt.setString(2, password);
+			pstmt.setString(2, hashtext);
 			
 			ResultSet rset = pstmt.executeQuery();
 			user = new User(rset.getInt(1), username, password, rset.getInt(4));	
 //			conn.close();
 		}
 		catch (SQLException e) {
+			e.printStackTrace();
+		}
+		catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
